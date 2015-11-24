@@ -1,13 +1,25 @@
 package com.oauth.authorization.controller;
 
+import com.oauth.authorization.model.AuthorizationDB;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Base64;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/oauth")
 public class OauthController {
+
+    @Autowired
+    AuthorizationDB db;
 
     /**
     client_id -	string - Required. The client ID that you received from DigitalOcean when you registered.
@@ -17,10 +29,19 @@ public class OauthController {
     state - string	- Recommended. An unguessable random string, used to protect against request forgery attacks.
      */
     @RequestMapping(path = "/authorize", method = RequestMethod.GET)
-    public String authorize(@RequestParam("client_id") String client_id,
-                            @RequestParam("redirect_uri") String redirect_uri,
-                            @RequestParam("response_type") String response_type) {
-        return "authorize";
+    public ResponseEntity<Void> authorize(@RequestParam("client_id") String client_id,
+                            @RequestParam("redirect_uri") String redirect_uri) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        //check the user's credentials somewhere...
+        if(db.isValidClientID(client_id)) {
+            String authToken = generateAuthorizationCode(client_id);
+            responseHeaders.add("location", redirect_uri + "?code=" + authToken);
+            return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            responseHeaders.add("location", redirect_uri + "?error=access_denied");
+            return new ResponseEntity<Void>(responseHeaders, HttpStatus.FORBIDDEN);
+        }
     }
 
     /**
@@ -32,11 +53,15 @@ public class OauthController {
      redirect_uri -	string -	Required. Must match the callback URL that you supplied during application registration.
      */
     @RequestMapping(path = "/token", method = RequestMethod.POST)
-    public String generateToken(@RequestParam("grand_type") String grant_type,
+    public String generateToken(@RequestParam("grant_type") String grant_type,
                                 @RequestParam("code") String code,
                                 @RequestParam("client_id") String client_id,
                                 @RequestParam("client_secret") String client_secret,
                                 @RequestParam("redirect_uri") String redirect_uri) {
         return "generateToken";
+    }
+
+    private String generateAuthorizationCode(String clientID) {
+       return Base64.getEncoder().encodeToString((clientID + UUID.randomUUID()).getBytes());
     }
 }
