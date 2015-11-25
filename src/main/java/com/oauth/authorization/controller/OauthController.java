@@ -21,19 +21,19 @@ public class OauthController {
     AuthorizationDB db;
 
     /**
-    client_id -	string - Required. The client ID that you received from DigitalOcean when you registered.
-    redirect_uri -	string	- Required. Must match the callback URL that you supplied during application registration. The callback URL where users will be sent after authorization.
-    response_type -	string - Required. Must be set to "code" to request an authorization code.
-    scope -	string	- Optional. If not provided, scope defaults to "read". The valid scopes are listed below.
-    state - string	- Recommended. An unguessable random string, used to protect against request forgery attacks.
+     * client_id -	string - Required. The client ID that you received from DigitalOcean when you registered.
+     * redirect_uri -	string	- Required. Must match the callback URL that you supplied during application registration. The callback URL where users will be sent after authorization.
+     * response_type -	string - Required. Must be set to "code" to request an authorization code.
+     * scope -	string	- Optional. If not provided, scope defaults to "read". The valid scopes are listed below.
+     * state - string	- Recommended. An unguessable random string, used to protect against request forgery attacks.
      */
-    @RequestMapping(path = "/authorize", method = RequestMethod.GET)
+    @RequestMapping(path = "/authorize", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<Void> authorize(
-            @RequestParam("response_type") String response_type,
-            @RequestParam("client_id") String client_id,
-            @RequestParam("redirect_uri") String redirect_uri,
-            @RequestParam("scope") String scope,
-            @RequestParam("state") String state) {
+            @RequestParam(value = "response_type", required = true) String response_type,
+            @RequestParam(value = "client_id", required = true) String client_id,
+            @RequestParam(value = "redirect_uri", required = false) String redirect_uri,
+            @RequestParam(value = "scope", required = false) String scope,
+            @RequestParam(value = "state", required = false) String state) {
 
         AuthorizeParameters parameters = new AuthorizeParameters();
         parameters.setClientId(client_id);
@@ -42,15 +42,21 @@ public class OauthController {
         parameters.setScope(scope);
         parameters.setState(state);
 
-        return doAuthorize(parameters);
+        if (parameters.getResponseType().equalsIgnoreCase("code")) {
+            return doAuthorizeCode(parameters);
+        } else if (parameters.getResponseType().equalsIgnoreCase("token")) {
+            return doAuthorizeToken(parameters);
+        } else {
+            return null;///???
+        }
     }
 
-    protected ResponseEntity<Void> doAuthorize(AuthorizeParameters parameters){
+    protected ResponseEntity<Void> doAuthorizeCode(AuthorizeParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
 
         //check the user's credentials somewhere...
-        if(db.isValidClientID(parameters.getClientId())) {
+        if (db.isValidClientID(parameters.getClientId())) {
             String authToken = generateAuthorizationCode(parameters.getClientId());
             responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authToken);
             return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
@@ -60,24 +66,74 @@ public class OauthController {
         }
     }
 
-    /**
-     * Use the code from above in your access token request, which is a POST request to the token endpoint with the appropriate parameters.
-     grant_type -	string -	Required. Must be set to "authorization_code" for an access token request.
-     code -	string -	Required. The code that you received as a response to Step 1.
-     client_id -	string -	Required. The client ID that you received from DigitalOcean when you registered.
-     client_secret -	string -	Required. The client secret that you received from DigitalOcean when you registered.
-     redirect_uri -	string -	Required. Must match the callback URL that you supplied during application registration.
-     */
-    @RequestMapping(path = "/token", method = RequestMethod.POST)
-    public String generateToken(@RequestParam("grant_type") String grant_type,
-                                @RequestParam("code") String code,
-                                @RequestParam("client_id") String client_id,
-                                @RequestParam("client_secret") String client_secret,
-                                @RequestParam("redirect_uri") String redirect_uri) {
-        return "generateToken";
+    protected ResponseEntity<Void> doAuthorizeToken(AuthorizeParameters parameters) {
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        //check the user's credentials somewhere...
+        if (db.isValidClientID(parameters.getClientId())) {
+            String authToken = generateAuthorizationCode(parameters.getClientId());
+            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authToken);
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return doAuthorizeError(parameters, "access_denied");
+        }
     }
 
-    private String generateAuthorizationCode(String clientID) {
-       return Base64.getEncoder().encodeToString((clientID + UUID.randomUUID()).getBytes());
+    protected ResponseEntity<Void> doAuthorizeError(AuthorizeParameters parameters, String error) {
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + error);
+        return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
+    }
+
+    protected String generateAuthorizationCode(String clientID) {
+        return Base64.getEncoder().encodeToString((clientID + UUID.randomUUID()).getBytes());
+    }
+
+    /**
+     * Use the code from above in your access token request, which is a POST request to the token endpoint with the appropriate parameters.
+     * grant_type -	string -	Required. Must be set to "authorization_code" for an access token request.
+     * code -	string -	Required. The code that you received as a response to Step 1.
+     * client_id -	string -	Required. The client ID that you received from DigitalOcean when you registered.
+     * client_secret -	string -	Required. The client secret that you received from DigitalOcean when you registered.
+     * redirect_uri -	string -	Required. Must match the callback URL that you supplied during application registration.
+     */
+    @RequestMapping(path = "/token", method = {RequestMethod.GET, RequestMethod.POST})
+    public ResponseEntity<Void> token(@RequestParam(value = "client_id", required = true) String client_id,
+                                      @RequestParam(value = "client_secret", required = false) String client_secret,
+                                      @RequestParam(value = "code", required = true) String code,
+                                      @RequestParam(value = "grant_type", required = true) String grant_type,
+                                      @RequestParam(value = "redirect_uri", required = true) String redirect_uri) {
+        TokenParameters parameters = new TokenParameters();
+        parameters.setClientId(parameters.getClientId());
+        parameters.setClientSecret(parameters.getClientSecret());
+        parameters.setCode(parameters.getCode());
+        parameters.setGrantType(parameters.getGrantType());
+        parameters.setRedirectUri(parameters.getRedirectUri());
+        parameters.setState(parameters.getState());
+        
+        return doGenerateToken(parameters);
+    }
+
+    protected ResponseEntity<Void> doGenerateToken(TokenParameters parameters) {
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        //check the user's credentials somewhere...
+        if (db.isValidClientID(parameters.getClientId())) {
+            String authToken = generateAuthorizationCode(parameters.getClientId());
+            responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return doTokenError(parameters, "access_denied");
+        }
+    }
+
+    protected ResponseEntity<Void> doTokenError(TokenParameters parameters, String error) {
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + error);
+        return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
     }
 }
