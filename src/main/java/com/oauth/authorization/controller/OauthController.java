@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 
 @RestController
@@ -54,14 +55,21 @@ public class OauthController {
     protected ResponseEntity<Void> doAuthorizeCode(AuthorizeParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
+        String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
 
-        //check the user's credentials somewhere...
+        // check the client id
         if (db.isValidClientID(parameters.getClientId())) {
-            String authToken = generateAuthorizationCode(parameters.getClientId());
-            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authToken);
+
+            // check the resource matches URL
+
+            // check if scope is allowed (both on resource and allow the the user has given the permission)
+            String authCode = generateAuthorizationCode(parameters.getClientId());
+            db.SaveAuthCode(authCode, parameters.getClientId(), new Date().getTime());
+
+            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authCode + state);
             return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
         } else {
-            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied");
+            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state);
             return new ResponseEntity<Void>(responseHeaders, HttpStatus.FORBIDDEN);
         }
     }
@@ -69,22 +77,25 @@ public class OauthController {
     protected ResponseEntity<Void> doAuthorizeToken(AuthorizeParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
+        String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
 
-        //check the user's credentials somewhere...
+        // check that the grant_type is 'authorization_code'
+        // check the client id
         if (db.isValidClientID(parameters.getClientId())) {
+
+            // check that the code matches and hasnt expired
             String authToken = generateAuthorizationCode(parameters.getClientId());
-            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authToken);
+            // check the url matches
+
+            //todo make this a application/x-www-form-urlencoded encoded object with the code and the state as the pieces of information
+            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authToken + state);
             return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
         } else {
-            return doAuthorizeError(parameters, "access_denied");
+            responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + HttpStatus.FORBIDDEN + state);
+
+            //todo make this a application/x-www-form-urlencoded encoded object with 'error' 'error_description' state
+            return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
         }
-    }
-
-    protected ResponseEntity<Void> doAuthorizeError(AuthorizeParameters parameters, String error) {
-
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + error);
-        return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
     }
 
     protected String generateAuthorizationCode(String clientID) {
@@ -112,7 +123,7 @@ public class OauthController {
         parameters.setGrantType(parameters.getGrantType());
         parameters.setRedirectUri(parameters.getRedirectUri());
         parameters.setState(parameters.getState());
-        
+
         return doGenerateToken(parameters);
     }
 
@@ -129,6 +140,19 @@ public class OauthController {
             return doTokenError(parameters, "access_denied");
         }
     }
+    // token response example
+    /*HTTP/1.1 200 OK
+     Content-Type: application/json;charset=UTF-8
+     Cache-Control: no-store
+     Pragma: no-cache
+
+     {
+       "access_token":"2YotnFZFEjr1zCsicMWpAA",
+       "token_type":"example",
+       "expires_in":3600,
+       "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+       "example_parameter":"example_value"
+     }*/
 
     protected ResponseEntity<Void> doTokenError(TokenParameters parameters, String error) {
 
