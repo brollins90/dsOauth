@@ -29,4 +29,9 @@ public class FakeAuthorizationDB implements AuthorizationDB{
     public String getClientSecret(String clientID) {
         return clientSecretMap.get(clientID);
     }
+
+    @Override
+    public void SaveAuthCode(String authCode, String clientId, long time) {
+        
+    }
 }

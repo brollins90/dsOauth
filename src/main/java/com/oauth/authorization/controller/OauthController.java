@@ -77,9 +77,9 @@ public class OauthController {
     protected ResponseEntity<Void> doAuthorizeToken(AuthorizeParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
+
         String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
 
-        // check that the grant_type is 'authorization_code'
         // check the client id
         if (db.isValidClientID(parameters.getClientId())) {
 
@@ -113,21 +113,32 @@ public class OauthController {
     @RequestMapping(path = "/token", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<Void> token(@RequestParam(value = "client_id", required = true) String client_id,
                                       @RequestParam(value = "client_secret", required = false) String client_secret,
-                                      @RequestParam(value = "code", required = true) String code,
+                                      @RequestParam(value = "code", required = false) String code,
                                       @RequestParam(value = "grant_type", required = true) String grant_type,
-                                      @RequestParam(value = "redirect_uri", required = true) String redirect_uri) {
+                                      @RequestParam(value = "password", required = false) String password,
+                                      @RequestParam(value = "redirect_uri", required = true) String redirect_uri,
+                                      @RequestParam(value = "state", required = false) String state,
+                                      @RequestParam(value = "username", required = false) String username) {
         TokenParameters parameters = new TokenParameters();
-        parameters.setClientId(parameters.getClientId());
-        parameters.setClientSecret(parameters.getClientSecret());
-        parameters.setCode(parameters.getCode());
-        parameters.setGrantType(parameters.getGrantType());
-        parameters.setRedirectUri(parameters.getRedirectUri());
-        parameters.setState(parameters.getState());
+        parameters.setClientId(client_id);
+        parameters.setClientSecret(client_secret);
+        parameters.setCode(code);
+        parameters.setGrantType(grant_type);
+        parameters.setPassword(password);
+        parameters.setRedirectUri(redirect_uri);
+        parameters.setState(state);
+        parameters.setUsername(username);
 
-        return doGenerateToken(parameters);
+        if (parameters.getGrantType().equalsIgnoreCase("authorization_code")) {
+            return doGenerateTokenFromAuthCode(parameters);
+        } else if (parameters.getGrantType().equalsIgnoreCase("password")) {
+            return doGenerateTokenFromPassword(parameters);
+        } else {
+            return null;///???
+        }
     }
 
-    protected ResponseEntity<Void> doGenerateToken(TokenParameters parameters) {
+    protected ResponseEntity<Void> doGenerateTokenFromAuthCode(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
 
@@ -153,6 +164,21 @@ public class OauthController {
        "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
        "example_parameter":"example_value"
      }*/
+
+
+    protected ResponseEntity<Void> doGenerateTokenFromPassword(TokenParameters parameters) {
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        //check the user's credentials somewhere...
+        if (db.isValidClientID(parameters.getClientId())) {
+            String authToken = generateAuthorizationCode(parameters.getClientId());
+            responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
+            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            return doTokenError(parameters, "access_denied");
+        }
+    }
 
     protected ResponseEntity<Void> doTokenError(TokenParameters parameters, String error) {
 

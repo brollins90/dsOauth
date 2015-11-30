@@ -9,8 +9,10 @@ public class TokenParameters {
     private String clientSecret;
     private String code;
     private String grantType;
+    private String password;
     private String redirectUri;
     private String state;
+    private String username;
 
     public String getClientId() {
         return clientId;
@@ -44,6 +46,14 @@ public class TokenParameters {
         this.grantType = grantType;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getRedirectUri() {
         return redirectUri;
     }
@@ -58,5 +68,13 @@ public class TokenParameters {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
