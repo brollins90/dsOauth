@@ -1,1 +1,39 @@
 https://aaronparecki.com/articles/2012/07/29/1/oauth2-simplified
+
+
+
+
+models******************8
+
+client:
+
+client id
+client secret
+redirect uri
+
+
+Scope
+name
+description
+
+  email
+  realName
+  phoneNumber
+
+
+
+user
+user id
+password
+email
+real name
+phone number
+
+
+
+auth token
+access_token
+token_type
+expires_in
+refresh_token
+
