@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link href="style.css" rel="stylesheet" />
+</head>
+<body>
+	<header th:replace="fragments/header :: header">
+	</header>
+	<page>
+		<form action="#" th:action="@{/editProfile}" th:object="${user}" method="post">
+    		<h1 th:text="${user.getName()}+'\'s profile:'"></h1>
+    		<fieldset>
+    			<label>Name:</label>
+    			<input type="text" name="name" th:field="*{name}" />
+			</fieldset>
+    		<br/>
+    		<fieldset>
+    			<label>Email:</label>
+    			<input type="email" name="email" th:field="*{email}" />
+			</fieldset>
+    		<br/>
+			<button name="save" type="submit">Save</button>
+			<input type="hidden" name="userId" th:field="*{userId}"/>
+    	</form>
+    </page>
+</body>
+</html>
