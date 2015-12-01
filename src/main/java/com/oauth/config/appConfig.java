@@ -28,13 +28,4 @@ public class appConfig {
     	return new Database();
     }
     
-    @Bean
-    public ViewResolver viewResolver() {
-    	InternalResourceViewResolver resolver = new InternalResourceViewResolver();
-    	Properties p = new Properties();
-    	p.setProperty("prefix", "/WEB-INF/pages/");
-    	p.setProperty("suffix", ".jsp");
-    	resolver.setAttributes(p);
-    	return resolver;
-    }
 }
