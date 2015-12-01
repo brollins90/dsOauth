@@ -33,7 +33,7 @@ public class OauthController {
                             @RequestParam("redirect_uri") String redirect_uri) {
         HttpHeaders responseHeaders = new HttpHeaders();
 
-        //check the user's credentials somewhere...
+        //check if the user is logged in already
         if(db.isValidClientID(client_id)) {
             String authToken = generateAuthorizationCode(client_id);
             responseHeaders.add("location", redirect_uri + "?code=" + authToken);
@@ -42,6 +42,8 @@ public class OauthController {
             responseHeaders.add("location", redirect_uri + "?error=access_denied");
             return new ResponseEntity<Void>(responseHeaders, HttpStatus.FORBIDDEN);
         }
+
+        //if the user is not logged in, redirect them to a login page
     }
 
     /**
