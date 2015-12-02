@@ -50,9 +50,9 @@ public class OauthController {
         parameters.setScope(scope);
         parameters.setState(state);
 
-        if (parameters.getResponseType().equalsIgnoreCase("code")) {
+        if (parameters.getResponseType().equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
             return doAuthorizeCode(parameters, request);
-        } else if (parameters.getResponseType().equalsIgnoreCase("token")) {
+        } else if (parameters.getResponseType().equalsIgnoreCase("token")) { // Implicit Flow
             return doAuthorizeToken(parameters);
         } else {
             return null;///???
@@ -163,7 +163,7 @@ public class OauthController {
      * redirect_uri -	string -	Required. Must match the callback URL that you supplied during application registration.
      */
     @RequestMapping(path = "/token", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<Void> token(@RequestParam(value = "client_id", required = true) String client_id,
+    public ResponseEntity<AccessTokenResponse> token(@RequestParam(value = "client_id", required = true) String client_id,
                                       @RequestParam(value = "client_secret", required = false) String client_secret,
                                       @RequestParam(value = "code", required = false) String code,
                                       @RequestParam(value = "grant_type", required = true) String grant_type,
@@ -181,27 +181,45 @@ public class OauthController {
         parameters.setState(state);
         parameters.setUsername(username);
 
-        if (parameters.getGrantType().equalsIgnoreCase("authorization_code")) {
+        if (parameters.getGrantType().equalsIgnoreCase("authorization_code")) { // AuthorizationCode Flow Step 2
             return doGenerateTokenFromAuthCode(parameters);
-        } else if (parameters.getGrantType().equalsIgnoreCase("password")) {
+        } else if (parameters.getGrantType().equalsIgnoreCase("client_credentials")) { // ClientCredentials Flow
+            return doGenerateTokenFromClientCredentials(parameters);
+        } else if (parameters.getGrantType().equalsIgnoreCase("password")) { // ResourceOwner Flow
             return doGenerateTokenFromPassword(parameters);
         } else {
             return null;///???
         }
     }
 
-    protected ResponseEntity<Void> doGenerateTokenFromAuthCode(TokenParameters parameters) {
+    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromClientCredentials(TokenParameters parameters) {
+        return  null;
+    }
+
+    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromAuthCode(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
 
-        //check the user's credentials somewhere...
-        if (db.isValidClientID(parameters.getClientId())) {
-            String authToken = generateAuthorizationCode(parameters.getClientId());
-            responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
-            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+
+        if (db.isValidCode(parameters.getClientId(), parameters.getCode())) {
+
+            String accessToken = db.generateAccessToken(parameters.getClientId(), parameters.getCode());
+
+            responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
+            responseHeaders.add("Cache-Control", "no-store");
+            responseHeaders.add("Pragma", "no-cache");
+
+            AccessTokenResponse tokenResponse = new AccessTokenResponse();
+            tokenResponse.access_token = accessToken;
+            tokenResponse.token_type = "access";
+            tokenResponse.expires_in = "3600";
+            tokenResponse.refresh_token = "";
+            return new ResponseEntity<>(/*tokenResponse, */responseHeaders, HttpStatus.OK);
         } else {
-            return doTokenError(parameters, "access_denied");
+            // how do we return an error with Typed Java?
+//            return doTokenError(parameters, "access_denied");
         }
+        return null;
     }
     // token response example
     /*HTTP/1.1 200 OK
@@ -218,7 +236,7 @@ public class OauthController {
      }*/
 
 
-    protected ResponseEntity<Void> doGenerateTokenFromPassword(TokenParameters parameters) {
+    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromPassword(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
 
@@ -228,8 +246,10 @@ public class OauthController {
             responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
             return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
         } else {
-            return doTokenError(parameters, "access_denied");
+            // how do we return an error with Typed Java?
+//            return doTokenError(parameters, "access_denied");
         }
+        return null;
     }
 
     protected ResponseEntity<Void> doTokenError(TokenParameters parameters, String error) {
