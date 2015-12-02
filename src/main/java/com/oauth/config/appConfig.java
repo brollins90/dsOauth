@@ -1,12 +1,11 @@
 package com.oauth.config;
 
-import java.util.Properties;
-
+import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
+import com.oauth.fakebookApplication.model.implementation.JWTUserAuthenticationTokenManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.view.InternalResourceViewResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import com.oauth.authorization.model.AuthorizationDB;
 import com.oauth.authorization.model.implementation.FakeAuthorizationDB;
@@ -16,7 +15,7 @@ import com.oauth.fakebookApplication.model.implementation.Database;
 
 @Configuration
 @ComponentScan()
-public class appConfig {
+public class appConfig extends WebMvcConfigurerAdapter {
 
     @Bean
     public AuthorizationDB authorizationDB() {
@@ -27,14 +26,11 @@ public class appConfig {
     public FakebookDB fakebookDB() {
     	return new Database();
     }
-    
+
     @Bean
-    public ViewResolver viewResolver() {
-    	InternalResourceViewResolver resolver = new InternalResourceViewResolver();
-    	Properties p = new Properties();
-    	p.setProperty("prefix", "/WEB-INF/pages/");
-    	p.setProperty("suffix", ".jsp");
-    	resolver.setAttributes(p);
-    	return resolver;
+    public UserAuthenticationTokenManager getUserAuthenticationTokenManager() {
+        JWTUserAuthenticationTokenManager atm = new JWTUserAuthenticationTokenManager();
+        return atm;
     }
+
 }

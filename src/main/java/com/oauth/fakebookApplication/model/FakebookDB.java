@@ -7,4 +7,5 @@ public interface FakebookDB {
 	public FakebookUser getUser(int userId);
 	public int addUser(FakebookUser user);
 	public void updateUser(int userId, FakebookUser user);
+	public FakebookUser getUser(String username, String password);
 }
