@@ -1,6 +1,7 @@
 package com.oauth.authorization.controller;
 
 import com.oauth.authorization.model.AuthorizationDB;
+import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -20,6 +23,9 @@ public class OauthController {
 
     @Autowired
     AuthorizationDB db;
+
+    @Autowired
+    UserAuthenticationTokenManager atm;
 
     /**
      * client_id -	string - Required. The client ID that you received from DigitalOcean when you registered.
@@ -34,7 +40,8 @@ public class OauthController {
             @RequestParam(value = "client_id", required = true) String client_id,
             @RequestParam(value = "redirect_uri", required = false) String redirect_uri,
             @RequestParam(value = "scope", required = false) String scope,
-            @RequestParam(value = "state", required = false) String state) {
+            @RequestParam(value = "state", required = false) String state,
+            HttpServletRequest request) {
 
         AuthorizeParameters parameters = new AuthorizeParameters();
         parameters.setClientId(client_id);
@@ -44,7 +51,7 @@ public class OauthController {
         parameters.setState(state);
 
         if (parameters.getResponseType().equalsIgnoreCase("code")) {
-            return doAuthorizeCode(parameters);
+            return doAuthorizeCode(parameters, request);
         } else if (parameters.getResponseType().equalsIgnoreCase("token")) {
             return doAuthorizeToken(parameters);
         } else {
@@ -52,7 +59,37 @@ public class OauthController {
         }
     }
 
-    protected ResponseEntity<Void> doAuthorizeCode(AuthorizeParameters parameters) {
+    protected boolean loggedIn(HttpServletRequest request){
+        boolean loggedIn = true;
+
+        if (request.getCookies() != null) {
+            System.out.println("found some cookies!");
+
+            Cookie tokenCookie = null;
+            Cookie[] cookies = request.getCookies();
+
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals("Auth-Token")) {
+                    tokenCookie = cookies[i];
+                    break;
+                }
+            }
+
+            if (tokenCookie != null) {
+                if (!atm.validateAuthToken(tokenCookie.getValue())) {
+                    loggedIn = false;
+                } else if(atm.validateAuthToken(tokenCookie.getValue())) {
+                    loggedIn = true;
+                }
+            }
+
+        } else {
+            loggedIn = false;
+        }
+        return loggedIn;
+    }
+
+    protected ResponseEntity<Void> doAuthorizeCode(AuthorizeParameters parameters, HttpServletRequest request) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
@@ -63,12 +100,16 @@ public class OauthController {
             // check the resource matches URL
             if (db.isValidRedirectUrl(parameters.getClientId(), parameters.getRedirectUri())) {
 
+                if(!loggedIn(request)) {
+                    responseHeaders.add("location", "/login");
+                    return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+                }
                 // we need to show login page, unless we are already logged in
                 // TODO
                 // possibly show an authorize page if it hasnt been requested before
 
                 // check if scope is allowed (both on resource and allow the the user has given the permission)
-                String authCode = generateAuthorizationCode(parameters.getClientId());
+                    String authCode = generateAuthorizationCode(parameters.getClientId());
                 db.SaveAuthCode(authCode, parameters.getClientId(), new Date().getTime());
 
                 responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authCode + state);

@@ -10,12 +10,14 @@ public class FakebookUser {
 	private int userId;
 	private String email;
 	private String name;
+	private String password;
 	private Set<FakebookUser> friends = new HashSet<>();
 	private List<Post> wall = new ArrayList<>();
 	
-	public FakebookUser(String email, String name) {
+	public FakebookUser(String email, String name, String password) {
 		this.email = email;
 		this.name = name;
+		this.password = password;
 	}
 	
 	public FakebookUser() {}
@@ -63,5 +65,9 @@ public class FakebookUser {
 	public void setUserId(int userId) {
 		this.userId = userId;
 	}
+
+	public String getPassword() { return this.password; }
+
+	public void setPassword(String password) { this.password = password; }
 	
 }
