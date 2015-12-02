@@ -26,6 +26,7 @@ public class FakeAuthorizationDB implements AuthorizationDB{
         client1.getAllowedScopes().add("name");
         client1.getAllowedScopes().add("email");
         client1.getAllowedScopes().add("phone");
+        client1.setClientType(ClientType.Confidential);
 
         Clients.put(client1.getClientId(), client1);
 
@@ -60,5 +61,15 @@ public class FakeAuthorizationDB implements AuthorizationDB{
     @Override
     public boolean isValidRedirectUrl(String clientId, String redirectUri) {
         return Clients.get(clientId).getClientRedirectUrl().equalsIgnoreCase(redirectUri);
+    }
+
+    @Override
+    public boolean isValidCode(String clientId, String code) {
+        return false;
+    }
+
+    @Override
+    public String generateAccessToken(String clientId, String code) {
+        return null;
     }
 }

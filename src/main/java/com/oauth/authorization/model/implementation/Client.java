@@ -13,10 +13,9 @@ public class Client {
     private String clientSecret;
     private String clientPostLogoutRedirectUrl;
     private String clientRedirectUrl;
-
     private List<String> AllowedScopes;
-
     private Flow flow;
+    private ClientType clientType;
 
     public Client() {
         AllowedScopes = new ArrayList<>();
@@ -76,5 +75,13 @@ public class Client {
 
     public void setFlow(Flow flow) {
         this.flow = flow;
+    }
+
+    public ClientType getClientType() {
+        return clientType;
+    }
+
+    public void setClientType(ClientType clientType) {
+        this.clientType = clientType;
     }
 }

@@ -9,4 +9,8 @@ public interface AuthorizationDB {
     void SaveAuthCode(String authCode, String clientId, long time);
 
     boolean isValidRedirectUrl(String clientId, String redirectUri);
+
+    boolean isValidCode(String clientId, String code);
+
+    String generateAccessToken(String clientId, String code);
 }
