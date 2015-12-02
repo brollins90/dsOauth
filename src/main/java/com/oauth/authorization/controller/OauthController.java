@@ -61,16 +61,27 @@ public class OauthController {
         if (db.isValidClientID(parameters.getClientId())) {
 
             // check the resource matches URL
+            if (db.isValidRedirectUrl(parameters.getClientId(), parameters.getRedirectUri())) {
 
-            // check if scope is allowed (both on resource and allow the the user has given the permission)
-            String authCode = generateAuthorizationCode(parameters.getClientId());
-            db.SaveAuthCode(authCode, parameters.getClientId(), new Date().getTime());
+                // we need to show login page, unless we are already logged in
+                // TODO
+                // possibly show an authorize page if it hasnt been requested before
 
-            responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authCode + state);
-            return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+                // check if scope is allowed (both on resource and allow the the user has given the permission)
+                String authCode = generateAuthorizationCode(parameters.getClientId());
+                db.SaveAuthCode(authCode, parameters.getClientId(), new Date().getTime());
+
+                responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authCode + state);
+                return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+
+            } else {
+                responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=url_dont_match");
+                return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
+
+            }
         } else {
-            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state);
-            return new ResponseEntity<Void>(responseHeaders, HttpStatus.FORBIDDEN);
+            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=bad_client_id");
+            return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
         }
     }
 
