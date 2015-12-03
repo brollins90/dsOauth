@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+    <div class="col col-8 left_col">
+        <h3 class="text-center font-bold">Ryli Dunlap's PointLess Profile</h3>
+
+        <div class="bio_box">
+            <h4 class="font-bold text-center">Bio</h4>
+            <img src="{% static "pointless/img/thumbs/profile.png" %}">
+            <p>
+                Here's a little info about me. I'm currently a CS student at Neumont University that for some reason is stuck (yet again) mucking
+                around with CSS and HTML tonight in order to complete a lab assignment that's due tomorrow morning. Besides wasting my time on
+                homework assignments, I enjoy some other stuff too such as DJing and traveling. I've lived all over and have moved several times. I wasted
+                4 years of my life in the Army. I'm wasting another 2.5 now in school. Maybe someday I'll actually be something when I grow up.
+            </p>
+        </div>
+    </div>
+    
+    <div class="col col-4 font-bold right_col">
+        <h3 class="text-center font-bold">Favorites</h3>
+        <div>Music: <span>Trance</span></div>
+        <div>Programming Languages: <span>Python, Ada</span></div>
+        <div>Hobbies: <span>DJing, Dance</span></div>
+    </div>
+
+    <div class="col col-4 font-bold right_col">
+        <h3 class="text-center font-bold">Ryli's Links</h3>
+        <ul>
+            <li><a href="{% url 'gallery' %}">Photo Gallery</a></li>
+        </ul>
+    </div>
+{% endblock %}

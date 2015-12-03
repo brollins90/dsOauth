@@ -1,0 +1,69 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>PointLess - Defining Social Networking</title>
+<meta name="description" content="Another pointless social networking site">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{% static "pointless/css/style.css" %}">
+<link rel="stylesheet" href="{% static "pointless/css/pointless.css" %}">
+<script src="{% static "pointless/js/modernizr.js" %}"></script>
+{% block head %}
+{% endblock %}
+</head>
+
+<body>
+
+<div class="row container header">
+
+<div class="clear row logo_left">
+
+{% if user.is_authenticated %}
+
+    <div class="login_info">
+        <div class="login_username">Logged in as <span class="font-bold">{{user.first_name}} {{user.last_name}}</span></div>
+        <div class="logout_link"><a href="{% url 'logout' %}">Log out</a></div>
+    </div>
+
+{% endif %}
+
+
+</div>
+
+</div>
+
+<div class="row container nav">
+    <ul>
+        <li><a href="{% url 'home' %}">Home</a></li>
+
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">My Profile</a></li>
+        <li><a href="{% url 'gallery' %}">My Gallery</a></li>
+        {% endif %}
+
+    </ul>
+</div>
+
+
+
+<div class="clear row container content">
+    
+        {% block content %}
+        {% endblock %}
+    
+
+</div>
+
+
+<div class="row container footer">
+    &copy; 2015 Some Nefarious Data-Mining/Leads-Gen Startup
+</div>
+
+
+
+
+</body>
+</html>
+
