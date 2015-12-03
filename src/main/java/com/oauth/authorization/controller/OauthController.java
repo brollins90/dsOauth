@@ -54,9 +54,15 @@ public class OauthController {
             return doAuthorizeCode(parameters, request);
         } else if (parameters.getResponseType().equalsIgnoreCase("token")) { // Implicit Flow
             return doAuthorizeToken(parameters);
+        } else if (parameters.getResponseType().equalsIgnoreCase("jwt")) { // Jwt Flow
+            return doAuthorizeJwt(parameters);
         } else {
             return null;///???
         }
+    }
+
+    protected ResponseEntity<Void> doAuthorizeJwt(AuthorizeParameters parameters) {
+        return null;
     }
 
     protected boolean loggedIn(HttpServletRequest request){
@@ -81,6 +87,8 @@ public class OauthController {
                 } else if(atm.validateAuthToken(tokenCookie.getValue())) {
                     loggedIn = true;
                 }
+            }else {
+                loggedIn = false;
             }
 
         } else {
