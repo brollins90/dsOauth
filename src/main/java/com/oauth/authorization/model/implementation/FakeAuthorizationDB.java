@@ -65,7 +65,7 @@ public class FakeAuthorizationDB implements AuthorizationDB{
 
     @Override
     public boolean isValidCode(String clientId, String code) {
-        return false;
+        return true;
     }
 
     @Override

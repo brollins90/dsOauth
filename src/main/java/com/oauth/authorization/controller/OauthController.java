@@ -35,7 +35,7 @@ public class OauthController {
      * state - string	- Recommended. An unguessable random string, used to protect against request forgery attacks.
      */
     @RequestMapping(path = "/authorize", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<Void> authorize(
+    public ResponseEntity authorize(
             @RequestParam(value = "response_type", required = true) String response_type,
             @RequestParam(value = "client_id", required = true) String client_id,
             @RequestParam(value = "redirect_uri", required = false) String redirect_uri,
@@ -55,7 +55,7 @@ public class OauthController {
         } else if (parameters.getResponseType().equalsIgnoreCase("token")) { // Implicit Flow
             return doAuthorizeToken(parameters);
         } else {
-            return null;///???
+            return new ResponseEntity("Invalid response_type", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -89,7 +89,7 @@ public class OauthController {
         return loggedIn;
     }
 
-    protected ResponseEntity<Void> doAuthorizeCode(AuthorizeParameters parameters, HttpServletRequest request) {
+    protected ResponseEntity doAuthorizeCode(AuthorizeParameters parameters, HttpServletRequest request) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
@@ -102,7 +102,7 @@ public class OauthController {
 
                 if(!loggedIn(request)) {
                     responseHeaders.add("location", "/login");
-                    return new ResponseEntity<Void>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+                    return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
                 }
                 // we need to show login page, unless we are already logged in
                 // TODO
@@ -113,20 +113,20 @@ public class OauthController {
                 db.SaveAuthCode(authCode, parameters.getClientId(), new Date().getTime());
 
                 responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authCode + state);
-                return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+                return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
 
             } else {
                 responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=url_dont_match");
-                return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
+                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
 
             }
         } else {
             responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=bad_client_id");
-            return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
+            return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
         }
     }
 
-    protected ResponseEntity<Void> doAuthorizeToken(AuthorizeParameters parameters) {
+    protected ResponseEntity doAuthorizeToken(AuthorizeParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
 
@@ -163,7 +163,7 @@ public class OauthController {
      * redirect_uri -	string -	Required. Must match the callback URL that you supplied during application registration.
      */
     @RequestMapping(path = "/token", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<AccessTokenResponse> token(@RequestParam(value = "client_id", required = true) String client_id,
+    public ResponseEntity token(@RequestParam(value = "client_id", required = true) String client_id,
                                       @RequestParam(value = "client_secret", required = false) String client_secret,
                                       @RequestParam(value = "code", required = false) String code,
                                       @RequestParam(value = "grant_type", required = true) String grant_type,
@@ -182,13 +182,13 @@ public class OauthController {
         parameters.setUsername(username);
 
         if (parameters.getGrantType().equalsIgnoreCase("authorization_code")) { // AuthorizationCode Flow Step 2
-            return doGenerateTokenFromAuthCode(parameters);
+             return doGenerateTokenFromAuthCode(parameters);
         } else if (parameters.getGrantType().equalsIgnoreCase("client_credentials")) { // ClientCredentials Flow
             return doGenerateTokenFromClientCredentials(parameters);
         } else if (parameters.getGrantType().equalsIgnoreCase("password")) { // ResourceOwner Flow
             return doGenerateTokenFromPassword(parameters);
         } else {
-            return null;///???
+            return new ResponseEntity("Invalid grant_type", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -214,7 +214,7 @@ public class OauthController {
             tokenResponse.token_type = "access";
             tokenResponse.expires_in = "3600";
             tokenResponse.refresh_token = "";
-            return new ResponseEntity<>(/*tokenResponse, */responseHeaders, HttpStatus.OK);
+            return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
         } else {
             // how do we return an error with Typed Java?
 //            return doTokenError(parameters, "access_denied");
@@ -252,10 +252,10 @@ public class OauthController {
         return null;
     }
 
-    protected ResponseEntity<Void> doTokenError(TokenParameters parameters, String error) {
+    protected ResponseEntity doTokenError(TokenParameters parameters, String error) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + error);
-        return new ResponseEntity<>(responseHeaders, HttpStatus.FORBIDDEN);
+        return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
     }
 }
