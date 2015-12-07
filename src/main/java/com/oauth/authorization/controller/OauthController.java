@@ -224,10 +224,8 @@ public class OauthController {
             tokenResponse.refresh_token = "";
             return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
         } else {
-            // how do we return an error with Typed Java?
-//            return doTokenError(parameters, "access_denied");
+            return doTokenError(parameters, "access_denied");
         }
-        return null;
     }
     // token response example
     /*HTTP/1.1 200 OK
@@ -254,10 +252,8 @@ public class OauthController {
             responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
             return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
         } else {
-            // how do we return an error with Typed Java?
-//            return doTokenError(parameters, "access_denied");
+            return doTokenError(parameters, "access_denied");
         }
-        return null;
     }
 
     protected ResponseEntity doTokenError(TokenParameters parameters, String error) {

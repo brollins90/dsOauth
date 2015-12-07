@@ -72,4 +72,25 @@ public class FakeAuthorizationDB implements AuthorizationDB{
     public String generateAccessToken(String clientId, String code) {
         return null;
     }
+
+    @Override
+    public User getUser(String userId) {
+        return Users.get(userId);
+    }
+
+    @Override
+    public void addUser(User user) {
+        Users.put(user.getUsername(), user);
+    }
+
+    @Override
+    public void updateUser(String userId, User user) {
+
+    }
+
+    @Override
+    public User getUser(String username, String password) {
+        User u = Users.get(username);
+        return (u.getPassword().equals(password)) ? u : null;
+    }
 }

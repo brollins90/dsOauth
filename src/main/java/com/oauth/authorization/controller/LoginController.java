@@ -1,0 +1,129 @@
+package com.oauth.authorization.controller;
+
+import com.oauth.authorization.model.AuthorizationDB;
+import com.oauth.authorization.model.implementation.User;
+import com.oauth.fakebookApplication.model.FakebookDB;
+import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
+import com.oauth.fakebookApplication.model.implementation.FakebookUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/2/login")
+public class LoginController {
+
+    @Autowired
+    AuthorizationDB db;
+
+//    @Autowired
+//    private UserAuthenticationTokenManager atm;
+
+    @RequestMapping("/profile")
+    public String view(String username, Model model) {
+        User user = db.getUser(username);
+        model.addAttribute("user", user);
+        model.addAttribute("username", username);
+        return "profile";
+    }
+
+    @RequestMapping("/editProfile")
+    public String edit(
+            String username,
+            User user,
+            Model model) {
+        db.updateUser(username, user);
+        return "redirect:profile?username=" + username;
+    }
+
+//    private boolean authenticate(HttpServletRequest request, HttpServletResponse response) throws Exception {
+//        boolean toBeContinued = true;
+//
+//        if (request.getCookies() != null) {
+//            System.out.println("found some cookies!");
+//
+//            Cookie tokenCookie = null;
+//            Cookie[] cookies = request.getCookies();
+//
+//            for (int i = 0; i < cookies.length; i++) {
+//                if (cookies[i].getName().equals("Auth-Token")) {
+//                    tokenCookie = cookies[i];
+//                    break;
+//                }
+//            }
+//
+//            if (tokenCookie != null) {
+//                if (!atm.validateAuthToken(tokenCookie.getValue())) {
+//                    response.sendRedirect(request.getContextPath() + "/login");
+//                    toBeContinued = false;
+//                }
+//            } else {
+//                response.sendRedirect(request.getContextPath() + "/login");
+//                toBeContinued = false;
+//            }
+//
+//            // cookies["t"];
+//        } else {
+//            response.sendRedirect(request.getContextPath() + "/login");
+//            toBeContinued = false;
+//        }
+//
+//        return toBeContinued;
+//    }
+
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public ResponseEntity loginUser(@ModelAttribute("username") String username,
+                                    @ModelAttribute("password") String password,
+                                    @RequestParam("redirect_uri") String redirect_uri,
+                                    WebRequest request, HttpServletResponse response, Model model) {
+
+        Map<String, Object> returnModel = new HashMap<String, Object>();
+
+        User user = db.getUser(username, password);
+
+        //TODO: Fix the redirects. If the user logs in, redirect them to the correct page, not their profile.
+
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        if (user != null) {
+
+            //String authToken = atm.generateAuthToken(user);
+            Cookie authCookie = new Cookie("Auth-Token", user.getUsername());
+            authCookie.setPath("/");
+            response.addCookie(authCookie);
+            model.addAttribute("user", user);
+            //returnModel.put("user", user);
+           // model.asMap().clear();
+            responseHeaders.add("location", redirect_uri);
+            return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        } else {
+            //returnModel.put("error", "User does not exist");
+            model.addAttribute("error", "User does not exist");
+            responseHeaders.add("location", "/login");
+            return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+        }
+    }
+//
+//    @RequestMapping(value = "/login", method = RequestMethod.GET)
+//    public String showLoginPage(Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken) {
+//
+//        FakebookUser user = null;
+//        if (!authToken.isEmpty()) {
+//            user = atm.getUserFromToken(authToken);
+//            model.addAttribute("user", user);
+//        }
+//        return "login";
+//    }
+}
