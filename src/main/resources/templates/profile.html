@@ -3,13 +3,13 @@
 <head>
     <title>User page</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link href="style.css" rel="stylesheet" />
+	<link th:href="@{~/style.css}" rel="stylesheet" />
 </head>
 <body>
 	<header th:replace="fragments/header :: header">
 	</header>
 	<page>
-		<form action="#" th:action="@{/editProfile}" th:object="${user}" method="post">
+		<form action="#" th:action="@{/2/login/editProfile}" th:object="${user}" method="post">
     		<h1 th:text="${user.getName()}+'\'s profile:'"></h1>
     		<fieldset>
     			<label>Name:</label>
@@ -22,7 +22,7 @@
 			</fieldset>
     		<br/>
 			<button name="save" type="submit">Save</button>
-			<input type="hidden" name="userId" th:field="*{userId}"/>
+			<input type="hidden" name="username" th:field="*{username}"/>
     	</form>
     </page>
 </body>

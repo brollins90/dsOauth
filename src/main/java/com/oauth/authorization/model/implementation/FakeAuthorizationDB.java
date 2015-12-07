@@ -85,7 +85,7 @@ public class FakeAuthorizationDB implements AuthorizationDB{
 
     @Override
     public void updateUser(String userId, User user) {
-
+    	addUser(user);
     }
 
     @Override
