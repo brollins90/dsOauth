@@ -21,65 +21,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/2/login")
+@RequestMapping("/2")
 public class LoginController {
 
     @Autowired
     AuthorizationDB db;
 
-//    @Autowired
-//    private UserAuthenticationTokenManager atm;
-
-    @RequestMapping("/profile")
-    public String view(String username, Model model) {
-        User user = db.getUser(username);
-        model.addAttribute("user", user);
-        model.addAttribute("username", username);
-        return "profile";
-    }
-
-    @RequestMapping("/editProfile")
-    public String edit(
-            String username,
-            User user,
-            Model model) {
-        db.updateUser(username, user);
-        return "redirect:profile?username=" + username;
-    }
-
-//    private boolean authenticate(HttpServletRequest request, HttpServletResponse response) throws Exception {
-//        boolean toBeContinued = true;
+//    @RequestMapping("/profile")
+//    public String view(String username, Model model) {
+//        User user = db.getUser(username);
+//        model.addAttribute("user", user);
+//        model.addAttribute("username", username);
+//        return "profile";
+//    }
 //
-//        if (request.getCookies() != null) {
-//            System.out.println("found some cookies!");
-//
-//            Cookie tokenCookie = null;
-//            Cookie[] cookies = request.getCookies();
-//
-//            for (int i = 0; i < cookies.length; i++) {
-//                if (cookies[i].getName().equals("Auth-Token")) {
-//                    tokenCookie = cookies[i];
-//                    break;
-//                }
-//            }
-//
-//            if (tokenCookie != null) {
-//                if (!atm.validateAuthToken(tokenCookie.getValue())) {
-//                    response.sendRedirect(request.getContextPath() + "/login");
-//                    toBeContinued = false;
-//                }
-//            } else {
-//                response.sendRedirect(request.getContextPath() + "/login");
-//                toBeContinued = false;
-//            }
-//
-//            // cookies["t"];
-//        } else {
-//            response.sendRedirect(request.getContextPath() + "/login");
-//            toBeContinued = false;
-//        }
-//
-//        return toBeContinued;
+//    @RequestMapping("/editProfile")
+//    public String edit(
+//            String username,
+//            User user,
+//            Model model) {
+//        db.updateUser(username, user);
+//        return "redirect:profile?username=" + username;
 //    }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)

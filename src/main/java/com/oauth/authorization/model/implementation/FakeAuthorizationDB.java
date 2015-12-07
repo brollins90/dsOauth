@@ -20,8 +20,8 @@ public class FakeAuthorizationDB implements AuthorizationDB{
         client1.setClientSecret("xoxoxo");
         client1.setClientId("clientid1");
         client1.setClientName("clientid1");
-        client1.setClientRedirectUrl("http://localhost:5000/callback");
-        client1.setClientPostLogoutRedirectUrl("http://localhost:5000/oauthlogout");
+        client1.setClientRedirectUrl("http://localhost:5000/login/oauthcallback");
+        client1.setClientPostLogoutRedirectUrl("http://localhost:5000/login/oauthlogout");
         client1.setFlow(Flow.AuthorizationCode);
         client1.getAllowedScopes().add("name");
         client1.getAllowedScopes().add("email");
@@ -70,7 +70,7 @@ public class FakeAuthorizationDB implements AuthorizationDB{
 
     @Override
     public String generateAccessToken(String clientId, String code) {
-        return null;
+        return "token111111";
     }
 
     @Override
