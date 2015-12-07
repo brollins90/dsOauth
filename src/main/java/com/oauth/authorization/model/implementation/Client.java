@@ -16,9 +16,14 @@ public class Client {
     private List<String> AllowedScopes;
     private Flow flow;
     private ClientType clientType;
-
+    
     public Client() {
         AllowedScopes = new ArrayList<>();
+        AllowedScopes.add("name");
+        AllowedScopes.add("email");
+        AllowedScopes.add("phone");
+        clientType = ClientType.Confidential;
+        flow = Flow.AuthorizationCode;
     }
 
     public String getClientId() {

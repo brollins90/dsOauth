@@ -10,7 +10,17 @@
 	</header>
 	<page>
 		<form action="#" th:action="@{/2/login/editProfile}" th:object="${user}" method="post">
-    		<h1 th:text="${user.getName()}+'\'s profile:'"></h1>
+    		<h1 th:text="'Edit '+${user.getName()}+'\'s profile:'"></h1>
+    		<fieldset>
+    			<label>Username:</label>
+    			<input type="text" name="username" th:field="*{username}" />
+			</fieldset>
+    		<br/>
+    		<fieldset>
+    			<label>Password:</label>
+    			<input type="password" name="password" th:field="*{password}" value="" />
+			</fieldset>
+			<br/>
     		<fieldset>
     			<label>Name:</label>
     			<input type="text" name="name" th:field="*{name}" />
@@ -21,8 +31,12 @@
     			<input type="email" name="email" th:field="*{email}" />
 			</fieldset>
     		<br/>
+    		<fieldset>
+    			<label>Phone:</label>
+    			<input type="tel" name="phone" th:field="*{phone}" />
+			</fieldset>
+    		<br/>
 			<button name="save" type="submit">Save</button>
-			<input type="hidden" name="username" th:field="*{username}"/>
     	</form>
     </page>
 </body>

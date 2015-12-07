@@ -1,11 +1,11 @@
 package com.oauth.authorization.model;
 
-import com.oauth.authorization.model.implementation.User;
-
-import java.util.List;
+import com.oauth.authorization.model.implementation.*;
 
 public interface AuthorizationDB {
     // client stuff
+	public Client getClient(String clientId);
+	public void addClient(Client client);
     public boolean isValidClientID(String clientID);
     public String getClientSecret(String clientID);
 

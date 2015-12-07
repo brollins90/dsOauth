@@ -1,28 +1,31 @@
 package com.oauth.authorization.controller;
 
-import com.oauth.authorization.model.AuthorizationDB;
-import com.oauth.authorization.model.implementation.User;
-import com.oauth.fakebookApplication.model.FakebookDB;
-import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
-import com.oauth.fakebookApplication.model.implementation.FakebookUser;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
+import com.oauth.authorization.model.AuthorizationDB;
+import com.oauth.authorization.model.implementation.*;
 
 @Controller
 @RequestMapping("/2/login")
 public class LoginController {
+	private static User defaultUser = new User();
+	private static Client defaultClient = new Client();
 
     @Autowired
     AuthorizationDB db;
@@ -31,7 +34,7 @@ public class LoginController {
 //    private UserAuthenticationTokenManager atm;
 
     @RequestMapping("/profile")
-    public String view(String username, Model model) {
+    public String profile(String username, Model model) {
         User user = db.getUser(username);
         model.addAttribute("user", user);
         model.addAttribute("username", username);
@@ -45,6 +48,45 @@ public class LoginController {
             Model model) {
         db.updateUser(username, user);
         return "redirect:profile?username=" + username;
+    }
+    
+    @RequestMapping(value="/newUser", method=RequestMethod.GET)
+    public String newUser(Model model) {
+    	model.addAttribute("user",defaultUser);
+        return "newUser";
+    }
+    
+    @RequestMapping(value="/newUser", method=RequestMethod.POST)
+    public String newUser(Model model, User user) {
+    	db.addUser(user);
+    	return "redirect:profile?username=" + user.getUsername();
+    }
+    
+    @RequestMapping("/client")
+    public String client(String clientId, Model model) {
+        Client client = db.getClient(clientId);
+        model.addAttribute("client", client);
+        return "client";
+    }
+    
+    @RequestMapping("/editClient")
+    public String editClient(
+            Client client,
+            Model model) {
+        db.addClient(client);
+        return "redirect:profile?username=" + client.getClientId();
+    }
+    
+    @RequestMapping(value="/newClient", method=RequestMethod.GET)
+    public String newClient(Model model) {
+    	model.addAttribute("client",defaultClient);
+        return "newClient";
+    }
+    
+    @RequestMapping(value="/newClient", method=RequestMethod.POST)
+    public String newClient(Model model, Client client) {
+    	db.addClient(client);
+    	return "redirect:client?clientId=" + client.getClientId();
     }
 
 //    private boolean authenticate(HttpServletRequest request, HttpServletResponse response) throws Exception {

@@ -3,6 +3,7 @@ package com.oauth.authorization.model.implementation;
 import com.oauth.authorization.model.AuthorizationDB;
 
 import javax.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,11 +23,6 @@ public class FakeAuthorizationDB implements AuthorizationDB{
         client1.setClientName("clientid1");
         client1.setClientRedirectUrl("http://localhost:5000/callback");
         client1.setClientPostLogoutRedirectUrl("http://localhost:5000/oauthlogout");
-        client1.setFlow(Flow.AuthorizationCode);
-        client1.getAllowedScopes().add("name");
-        client1.getAllowedScopes().add("email");
-        client1.getAllowedScopes().add("phone");
-        client1.setClientType(ClientType.Confidential);
 
         Clients.put(client1.getClientId(), client1);
 
@@ -93,4 +89,12 @@ public class FakeAuthorizationDB implements AuthorizationDB{
         User u = Users.get(username);
         return (u.getPassword().equals(password)) ? u : null;
     }
+	@Override
+	public Client getClient(String clientId) {
+		return Clients.get(clientId);
+	}
+	@Override
+	public void addClient(Client client) {
+		Clients.put(client.getClientId(), client);
+	}
 }
