@@ -114,11 +114,11 @@ public class UserController {
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginPage(Model model,
                                 @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+                                @RequestParam(value = "client_id", required = true) String client_id,
                                 @RequestParam(value = "redirect_uri", defaultValue = "http://localhost:8080/user/profile") String redirect_uri,
-                                @RequestParam("response_type") String response_type,
-                                @RequestParam("client_id") String client_id,
-                                @RequestParam("scope") String scope,
-                                @RequestParam("state") String state) {
+                                @RequestParam(value = "response_type", required = true) String response_type,
+                                @RequestParam(value = "scope", required = false) String scope,
+                                @RequestParam(value = "state", required = false) String state) {
 
         if (!authToken.isEmpty()) {
             com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
@@ -126,13 +126,15 @@ public class UserController {
                 User user = userService.findByUsername(cookie.getUsername());
 
                 model.addAttribute("user", user);
-                model.addAttribute("redirect_uri", redirect_uri);
-                model.addAttribute("response_type", response_type);
-                model.addAttribute("client_id", client_id);
-                model.addAttribute("scope", scope);
-                model.addAttribute("state", state);
             }
         }
+        AuthorizeParameters parameters = new AuthorizeParameters();
+        parameters.client_id = client_id;
+        parameters.redirect_uri = redirect_uri;
+        parameters.response_type = response_type;
+        parameters.scope = scope;
+        parameters.state = state;
+        model.addAttribute("authParams", parameters);
         return "login";
     }
     

@@ -27,7 +27,15 @@ public class Cookie implements Serializable {
         return cookie;
     }
 
+    public void setCookie(String cookie) {
+        this.cookie = cookie;
+    }
+
     public String getUsername() {
         return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
