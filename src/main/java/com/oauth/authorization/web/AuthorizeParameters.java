@@ -1,8 +1,5 @@
-package com.oauth.authorization.controller;
+package com.oauth.authorization.web;
 
-/**
- * Created by brollins on 11/25/2015.
- */
 public class AuthorizeParameters {
 
     private String clientId;
