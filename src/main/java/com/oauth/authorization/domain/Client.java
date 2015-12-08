@@ -1,8 +1,15 @@
 package com.oauth.authorization.domain;
 
-import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
 
 @Entity
 public class Client implements Serializable {
@@ -33,8 +40,14 @@ public class Client implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private ClientType clientType;
-
+    
     public Client() {
+        AllowedScopes = new ArrayList<>();
+        AllowedScopes.add("name");
+        AllowedScopes.add("email");
+        AllowedScopes.add("phone");
+        clientType = ClientType.Confidential;
+        flow = Flow.AuthorizationCode;
     }
 
     public Client(String clientId, String clientName, String clientSecret, String clientPostLogoutRedirectUrl,
@@ -80,4 +93,41 @@ public class Client implements Serializable {
     public ClientType getClientType() {
         return clientType;
     }
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
+	public void setClientName(String clientName) {
+		this.clientName = clientName;
+	}
+
+	public void setClientSecret(String clientSecret) {
+		this.clientSecret = clientSecret;
+	}
+
+	public void setClientPostLogoutRedirectUrl(String clientPostLogoutRedirectUrl) {
+		this.clientPostLogoutRedirectUrl = clientPostLogoutRedirectUrl;
+	}
+
+	public void setClientRedirectUrl(String clientRedirectUrl) {
+		this.clientRedirectUrl = clientRedirectUrl;
+	}
+
+	public void setAllowedScopes(List<String> allowedScopes) {
+		AllowedScopes = allowedScopes;
+	}
+
+	public void setFlow(Flow flow) {
+		this.flow = flow;
+	}
+
+	public void setClientType(ClientType clientType) {
+		this.clientType = clientType;
+	}
+    
 }

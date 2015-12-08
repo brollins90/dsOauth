@@ -15,6 +15,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +35,27 @@ public class UserController {
         model.addAttribute("user", user);
         model.addAttribute("username", username);
         return "profile";
+    }
+    
+    @RequestMapping("/edit")
+    public String edit(
+            String username,
+            User user,
+            Model model) {
+        userService.updateUser(user, username);
+        return "redirect:profile?username=" + username;
+    }
+    
+    @RequestMapping(value="/new", method=RequestMethod.GET)
+    public String newUser(Model model) {
+    	model.addAttribute("user", new User());
+        return "newUser";
+    }
+    
+    @RequestMapping(value="/new", method=RequestMethod.POST)
+    public String newUser(Model model, User user) {
+    	userService.addUser(user);
+    	return "redirect:profile?username=" + user.getUsername();
     }
 
 //    @RequestMapping("/editProfile")
@@ -113,4 +135,5 @@ public class UserController {
         }
         return "login";
     }
+    
 }

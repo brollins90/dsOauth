@@ -25,6 +25,7 @@ public class User implements Serializable {
     private String phone;
 
     public User() {
+    	
     }
 
     public User(String username, String password, String name, String email, String phone) {
@@ -54,4 +55,25 @@ public class User implements Serializable {
     public String getPhone() {
         return phone;
     }
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+    
 }

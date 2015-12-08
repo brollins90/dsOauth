@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link th:href="@{~/style.css}" rel="stylesheet" />
+</head>
+<body>
+	<header th:replace="fragments/header :: header">
+	</header>
+	<page>
+		<form action="#" th:action="@{/client/edit}" th:object="${client}" method="post">
+    		<h1 th:text="'Edit '+${client.getClientName()}+'\'s profile:'"></h1>
+    		<fieldset>
+    			<label>ClientId:</label>
+    			<input type="text" name="clientId" th:field="*{clientId}" />
+			</fieldset>
+    		<br/>
+    		<fieldset>
+    			<label>Client Secret:</label>
+    			<input type="text" name="clientSecret" th:field="*{clientSecret}" value="" />
+			</fieldset>
+			<br/>
+    		<fieldset>
+    			<label>Name:</label>
+    			<input type="text" name="clientName" th:field="*{clientName}" />
+			</fieldset>
+    		<br/>
+    		<fieldset>
+    			<label>clientPostLogoutRedirectUrl:</label>
+    			<input type="text" name="clientPostLogoutRedirectUrl" th:field="*{clientPostLogoutRedirectUrl}" />
+			</fieldset>
+    		<br/>
+    		<fieldset>
+    			<label>clientRedirectUrl:</label>
+    			<input type="text" name="clientRedirectUrl" th:field="*{clientRedirectUrl}" />
+			</fieldset>
+    		<br/>
+			<button name="save" type="submit">Save</button>
+    	</form>
+    </page>
+</body>
+</html>

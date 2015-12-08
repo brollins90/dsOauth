@@ -2,6 +2,7 @@ package com.oauth.authorization.service;
 
 import com.oauth.authorization.domain.Client;
 import com.oauth.authorization.domain.ClientRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,4 +23,17 @@ public class ClientServiceImpl implements ClientService {
         Assert.hasLength(clientId, "clientId must not be empty");
         return this.clientRepository.findByClientId(clientId);
     }
+
+	@Override
+	public void addClient(Client client) {
+        Assert.hasLength(client.getClientId(), "clientId must not be empty");
+		Assert.isNull(this.clientRepository.findByClientId(client.getClientId()), "clientId must be unique");
+		clientRepository.save(client);
+	}
+
+	@Override
+	public void updateClient(Client client, String clientId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

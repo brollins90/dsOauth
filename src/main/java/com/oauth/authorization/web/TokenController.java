@@ -6,16 +6,21 @@ import com.oauth.authorization.service.ClientService;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.AuthorizationCode;
+import com.oauth.authorization.domain.Client;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Controller
 public class TokenController {
 
     @Autowired
@@ -60,6 +65,33 @@ public class TokenController {
         } else {
             return new ResponseEntity("Invalid grant_type", HttpStatus.BAD_REQUEST);
         }
+    }
+    
+    @RequestMapping("/client")
+    public String client(String clientId, Model model) {
+        Client client = clientService.findClient(clientId);
+        model.addAttribute("client", client);
+        return "client";
+    }
+    
+    @RequestMapping("/client/edit")
+    public String editClient(
+            Client client,
+            Model model) {
+    	clientService.addClient(client);
+        return "redirect:client?clientId=" + client.getClientId();
+    }
+    
+    @RequestMapping(value="/client/new", method=RequestMethod.GET)
+    public String newClient(Model model) {
+    	model.addAttribute("client", new Client());
+        return "newClient";
+    }
+    
+    @RequestMapping(value="/client/new", method=RequestMethod.POST)
+    public String newClient(Model model, Client client) {
+    	clientService.addClient(client);
+    	return "redirect:client?clientId=" + client.getClientId();
     }
 
     protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromClientCredentials(TokenParameters parameters) {
