@@ -109,7 +109,7 @@ public class OauthController {
             if (db.isValidRedirectUrl(parameters.getClientId(), parameters.getRedirectUri())) {
 
                 if(!loggedIn(request)) {
-                    responseHeaders.add("location", "/login");
+                    responseHeaders.add("location", "/2/login");
                     return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
                 }
                 // we need to show login page, unless we are already logged in

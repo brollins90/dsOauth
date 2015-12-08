@@ -22,14 +22,13 @@ import com.oauth.authorization.model.AuthorizationDB;
 import com.oauth.authorization.model.implementation.*;
 
 @Controller
-@RequestMapping("/2/login")
+@RequestMapping("/2")
 public class LoginController {
 	private static User defaultUser = new User();
 	private static Client defaultClient = new Client();
 
     @Autowired
     AuthorizationDB db;
-
 //    @Autowired
 //    private UserAuthenticationTokenManager atm;
 
@@ -120,8 +119,15 @@ public class LoginController {
 //            response.sendRedirect(request.getContextPath() + "/login");
 //            toBeContinued = false;
 //        }
+
 //
-//        return toBeContinued;
+//    @RequestMapping("/editProfile")
+//    public String edit(
+//            String username,
+//            User user,
+//            Model model) {
+//        db.updateUser(username, user);
+//        return "redirect:profile?username=" + username;
 //    }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
