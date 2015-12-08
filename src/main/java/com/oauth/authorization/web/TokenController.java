@@ -118,7 +118,7 @@ public class TokenController {
 //        if (db.isValidClientID(parameters.getClientId())) {
 //            String authToken = generateAuthorizationCode(parameters.getClientId());
 //            responseHeaders.add("location", parameters.getRedirectUri() + "?access_token=" + authToken);
-//            return new ResponseEntity<>(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
+//            return new ResponseEntity<>(responseHeaders, HttpStatus.FOUND);
 //        } else {
 //            return doTokenError(parameters, "access_denied");
 //        }
