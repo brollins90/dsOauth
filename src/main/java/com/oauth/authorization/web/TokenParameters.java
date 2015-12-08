@@ -1,8 +1,5 @@
-package com.oauth.authorization.controller;
+package com.oauth.authorization.web;
 
-/**
- * Created by brollins on 11/25/2015.
- */
 public class TokenParameters {
 
     private String clientId;
@@ -11,6 +8,7 @@ public class TokenParameters {
     private String grantType;
     private String password;
     private String redirectUri;
+    private String scope;
     private String state;
     private String username;
 
@@ -60,6 +58,14 @@ public class TokenParameters {
 
     public void setRedirectUri(String redirectUri) {
         this.redirectUri = redirectUri;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
     }
 
     public String getState() {

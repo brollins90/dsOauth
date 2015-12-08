@@ -1,8 +1,5 @@
-package com.oauth.authorization.model.implementation;
+package com.oauth.authorization.domain;
 
-/**
- * Created by brollins on 12/1/2015.
- */
 public enum Flow {
     AuthorizationCode,
     Implicit,
