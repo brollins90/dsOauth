@@ -9,10 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.Cookie;
@@ -30,14 +27,14 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-//    @RequestMapping("/profile")
-//    public String view(String username, Model model) {
-//        User user = db.getUser(username);
-//        model.addAttribute("user", user);
-//        model.addAttribute("username", username);
-//        return "profile";
-//    }
-//
+    @RequestMapping("/profile")
+    public String view(String username, Model model) {
+        User user = userService.findByUsername(username);
+        model.addAttribute("user", user);
+        model.addAttribute("username", username);
+        return "profile";
+    }
+
 //    @RequestMapping("/editProfile")
 //    public String edit(
 //            String username,
@@ -50,7 +47,7 @@ public class UserController {
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity loginUser(@ModelAttribute("username") String username,
                                     @ModelAttribute("password") String password,
-                                    @RequestParam("redirect_uri") String redirect_uri,
+                                    @RequestParam(value = "redirect_uri", defaultValue = "http://localhost:8080/user/profile") String redirect_uri,
                                     WebRequest request, HttpServletResponse response, Model model) {
 
         Map<String, Object> returnModel = new HashMap<String, Object>();
@@ -81,15 +78,16 @@ public class UserController {
             return new ResponseEntity(responseHeaders, HttpStatus.TEMPORARY_REDIRECT);
         }
     }
-//
-//    @RequestMapping(value = "/login", method = RequestMethod.GET)
-//    public String showLoginPage(Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken) {
-//
-//        FakebookUser user = null;
-//        if (!authToken.isEmpty()) {
-//            user = atm.getUserFromToken(authToken);
-//            model.addAttribute("user", user);
-//        }
-//        return "login";
-//    }
+
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    public String showLoginPage(Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken) {
+
+        if (!authToken.isEmpty()) {
+            com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
+            User user = userService.findByUsername(cookie.getUsername());
+
+            model.addAttribute("user", user);
+        }
+        return "login";
+    }
 }
