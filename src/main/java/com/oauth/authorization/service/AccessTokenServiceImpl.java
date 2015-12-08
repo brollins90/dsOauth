@@ -32,8 +32,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 "exapleTokenType",
                 3600l,
                 scope);
-
-        return null;
+        this.accessTokenRepository.save(accessToken);
+        return accessToken;
     }
 
     private String generateAccessTokenString() {

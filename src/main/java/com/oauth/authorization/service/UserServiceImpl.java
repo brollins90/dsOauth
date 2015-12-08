@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
     public User findByUsernameAndPassword(String username, String password) {
         Assert.hasLength(username, "Username must not be empty");
         Assert.hasLength(password, "Password must not be empty");
-        return this.userRepository.findByUsernameAndPassword(username, password);
+        return  new User("user1", "password", "Users actual Name", "user1@example.com", "111-111-1111");
+//        return this.userRepository.findByUsernameAndPassword(username, password);
     }
 }

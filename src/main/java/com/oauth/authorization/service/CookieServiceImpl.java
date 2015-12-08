@@ -28,8 +28,8 @@ public class CookieServiceImpl implements CookieService {
         Cookie cookie = new Cookie(
                 this.generateCookieString(),
                 username);
-
-        return null;
+        this.cookieRepository.save(cookie);
+        return cookie;
     }
 
     private String generateCookieString() {

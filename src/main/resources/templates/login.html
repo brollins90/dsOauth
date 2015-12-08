@@ -5,14 +5,19 @@
 <body>
 
 <div class="login-container">
-    <form method="POST" enctype="utf8" action="login" name="myForm">
-
-        <div class="form-group"><input type="text" name="redirect_uri" value="http://localhost:5000/login/oauthcallback"/></div>
+    <form th:action="@{/user/login}" method="post" enctype="utf8" name="myForm">
+        <div class="form-group">
+            <input type="hidden" name="response_type" th:field="${response_type}" />
+            <input type="hidden" name="client_id" th:field="${client_id}" />
+            <input type="hidden" name="redirect_uri" th:field="${redirect_uri}" />
+            <input type="hidden" name="scope" th:field="${scope}" />
+            <input type="hidden" name="state" th:field="${state}" />
+        </div>
         <div class="form-group">
             <label class="col-sm-2 control-label">Username</label>
 
             <div class="col-sm-9">
-                <input class="form-control" type="test" name="username" />
+                <input class="form-control" type="text" name="username"/>
             </div>
         </div>
 
@@ -20,7 +25,7 @@
             <label class="col-sm-2 control-label">Password</label>
 
             <div class="col-sm-9">
-                <input class="form-control" type="password" name="password" />
+                <input class="form-control" type="password" name="password"/>
             </div>
         </div>
 
@@ -28,9 +33,7 @@
             <span class="glyphicon glyphicon-log-in gly-margin"></span>
             Login
         </button>
-
     </form>
-
 </div>
 </body>
 </html>

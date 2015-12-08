@@ -1,9 +1,10 @@
 package com.oauth.authorization.web;
 
+import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserService;
-import com.oauth.authorization.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,9 +49,13 @@ public class UserController {
     public ResponseEntity loginUser(@ModelAttribute("username") String username,
                                     @ModelAttribute("password") String password,
                                     @ModelAttribute("redirect_uri") String redirect_uri,
+                                    @ModelAttribute("response_type") String response_type,
+                                    @ModelAttribute("client_id") String client_id,
+                                    @ModelAttribute("scope") String scope,
+                                    @ModelAttribute("state") String state,
                                     WebRequest request, HttpServletResponse response, Model model) {
 
-        Map<String, Object> returnModel = new HashMap<String, Object>();
+        Map<String, Object> returnModel = new HashMap<>();
 
         System.out.println("redirect_uri: " + redirect_uri);
         User user = userService.findByUsernameAndPassword(username, password);
@@ -72,13 +77,14 @@ public class UserController {
             model.addAttribute("user", user);
             //returnModel.put("user", user);
             // model.asMap().clear();
-            responseHeaders.add("location", redirect_uri);
+            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         } else {
-            System.out.println("User not found: "+ username);
+            System.out.println("User not found: " + username);
             //returnModel.put("error", "User does not exist");
             model.addAttribute("error", "User does not exist");
-            responseHeaders.add("location", "/user/login?redirect_uri="+redirect_uri);
+            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
+            //responseHeaders.add("location", "/user/login?redirect_uri=" + redirect_uri);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
     }
@@ -86,14 +92,24 @@ public class UserController {
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginPage(Model model,
                                 @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
-                                @RequestParam(value = "redirect_uri", defaultValue = "http://localhost:8080/user/profile") String redirect_uri) {
+                                @RequestParam(value = "redirect_uri", defaultValue = "http://localhost:8080/user/profile") String redirect_uri,
+                                @RequestParam("response_type") String response_type,
+                                @RequestParam("client_id") String client_id,
+                                @RequestParam("scope") String scope,
+                                @RequestParam("state") String state) {
 
         if (!authToken.isEmpty()) {
             com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
-            User user = userService.findByUsername(cookie.getUsername());
+            if (cookie != null) {
+                User user = userService.findByUsername(cookie.getUsername());
 
-            model.addAttribute("user", user);
-            model.addAttribute("redirect_uri", redirect_uri);
+                model.addAttribute("user", user);
+                model.addAttribute("redirect_uri", redirect_uri);
+                model.addAttribute("response_type", response_type);
+                model.addAttribute("client_id", client_id);
+                model.addAttribute("scope", scope);
+                model.addAttribute("state", state);
+            }
         }
         return "login";
     }

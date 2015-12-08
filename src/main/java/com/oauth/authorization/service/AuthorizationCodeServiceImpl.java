@@ -29,8 +29,8 @@ public class AuthorizationCodeServiceImpl implements AuthorizationCodeService {
                 this.generateAuthorizationCodeString(),
                 clientId,
                 username);
-
-        return null;
+        this.authorizationCodeRepository.save(authorizationCode);
+        return authorizationCode;
     }
 
     private String generateAuthorizationCodeString() {

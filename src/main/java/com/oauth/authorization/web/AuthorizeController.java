@@ -51,6 +51,8 @@ public class AuthorizeController {
         parameters.setScope(scope);
         parameters.setState(state);
 
+        System.out.println("authorize endpoint");
+
         if (parameters.getResponseType().equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
             return doAuthorizeCodeOrToken(parameters, request);
         } else if (parameters.getResponseType().equalsIgnoreCase("token")) { // Implicit Flow
@@ -90,7 +92,12 @@ public class AuthorizeController {
         // we need to show login page, unless we are already logged in
         String username = isLoggedIn(request);
         if (username == null) {
-            responseHeaders.add("location", "/user/login" + "?redirect_uri=" + parameters.getRedirectUri() + state);
+            responseHeaders.add("location", "/user/login"
+                    + "?redirect_uri=" + parameters.getRedirectUri()
+                    + "&response_type=" + parameters.getResponseType()
+                    + "&client_id=" + parameters.getClientId()
+                    + "&scope=" + parameters.getScope()
+                    + state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
 
@@ -104,7 +111,7 @@ public class AuthorizeController {
 
         if (parameters.getResponseType().equalsIgnoreCase("code")) {
 
-            if (!client.getFlow().toString().equalsIgnoreCase("code")) {
+            if (!client.getFlow().toString().equalsIgnoreCase("AuthorizationCode")) {
                 responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
                 return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
             } else {
