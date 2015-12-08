@@ -1,9 +1,9 @@
 package com.oauth.authorization.domain;
 
-import com.oauth.authorization.domain.Cookie;
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface CookieRepository extends Repository<Cookie, String> {
+
+public interface CookieRepository extends CrudRepository<Cookie, String> {
 
     Cookie findByCookie(String cookie);
 }

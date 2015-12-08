@@ -1,15 +1,8 @@
 package com.oauth.authorization.domain;
 
-import com.oauth.authorization.domain.Client;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface ClientRepository extends Repository<Client, String> {
-
-    Page<Client> findAll(Pageable pageable);
+public interface ClientRepository extends CrudRepository<Client, String> {
 
     Client findByClientId(String clientId);
-
-    void save(Client client);
 }

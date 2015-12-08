@@ -1,9 +1,8 @@
 package com.oauth.authorization.domain;
 
-import com.oauth.authorization.domain.AuthorizationCode;
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface AuthorizationCodeRepository extends Repository<AuthorizationCode, String> {
+public interface AuthorizationCodeRepository extends CrudRepository<AuthorizationCode, String> {
 
     AuthorizationCode findByAuthorizationCode(String authorizationCode);
 }

@@ -1,9 +1,8 @@
 package com.oauth.authorization.domain;
 
-import com.oauth.authorization.domain.AccessToken;
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface AccessTokenRepository extends Repository<AccessToken, String> {
+public interface AccessTokenRepository extends CrudRepository<AccessToken, String> {
 
     AccessToken findByAccessToken(String accessToken);
 }
