@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Controller
 public class TokenController {
 
     @Autowired
@@ -72,21 +74,21 @@ public class TokenController {
         return "client";
     }
     
-    @RequestMapping("/editClient")
+    @RequestMapping("/client/edit")
     public String editClient(
             Client client,
             Model model) {
     	clientService.addClient(client);
-        return "redirect:profile?username=" + client.getClientId();
+        return "redirect:client?clientId=" + client.getClientId();
     }
     
-    @RequestMapping(value="/newClient", method=RequestMethod.GET)
+    @RequestMapping(value="/client/new", method=RequestMethod.GET)
     public String newClient(Model model) {
     	model.addAttribute("client", new Client());
         return "newClient";
     }
     
-    @RequestMapping(value="/newClient", method=RequestMethod.POST)
+    @RequestMapping(value="/client/new", method=RequestMethod.POST)
     public String newClient(Model model, Client client) {
     	clientService.addClient(client);
     	return "redirect:client?clientId=" + client.getClientId();

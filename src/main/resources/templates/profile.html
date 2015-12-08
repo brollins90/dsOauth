@@ -9,7 +9,7 @@
 	<header th:replace="fragments/header :: header">
 	</header>
 	<page>
-		<form action="#" th:action="@{/2/editProfile}" th:object="${user}" method="post">
+		<form action="#" th:action="@{/user/edit}" th:object="${user}" method="post">
     		<h1 th:text="'Edit '+${user.getName()}+'\'s profile:'"></h1>
     		<fieldset>
     			<label>Username:</label>

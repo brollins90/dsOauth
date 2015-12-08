@@ -37,7 +37,7 @@ public class UserController {
         return "profile";
     }
     
-    @RequestMapping("/editProfile")
+    @RequestMapping("/edit")
     public String edit(
             String username,
             User user,
@@ -46,13 +46,13 @@ public class UserController {
         return "redirect:profile?username=" + username;
     }
     
-    @RequestMapping(value="/newUser", method=RequestMethod.GET)
+    @RequestMapping(value="/new", method=RequestMethod.GET)
     public String newUser(Model model) {
     	model.addAttribute("user", new User());
         return "newUser";
     }
     
-    @RequestMapping(value="/newUser", method=RequestMethod.POST)
+    @RequestMapping(value="/new", method=RequestMethod.POST)
     public String newUser(Model model, User user) {
     	userService.addUser(user);
     	return "redirect:profile?username=" + user.getUsername();

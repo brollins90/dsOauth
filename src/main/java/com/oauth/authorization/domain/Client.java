@@ -93,4 +93,41 @@ public class Client implements Serializable {
     public ClientType getClientType() {
         return clientType;
     }
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
+	public void setClientName(String clientName) {
+		this.clientName = clientName;
+	}
+
+	public void setClientSecret(String clientSecret) {
+		this.clientSecret = clientSecret;
+	}
+
+	public void setClientPostLogoutRedirectUrl(String clientPostLogoutRedirectUrl) {
+		this.clientPostLogoutRedirectUrl = clientPostLogoutRedirectUrl;
+	}
+
+	public void setClientRedirectUrl(String clientRedirectUrl) {
+		this.clientRedirectUrl = clientRedirectUrl;
+	}
+
+	public void setAllowedScopes(List<String> allowedScopes) {
+		AllowedScopes = allowedScopes;
+	}
+
+	public void setFlow(Flow flow) {
+		this.flow = flow;
+	}
+
+	public void setClientType(ClientType clientType) {
+		this.clientType = clientType;
+	}
+    
 }

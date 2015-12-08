@@ -9,7 +9,7 @@
 	<header th:replace="fragments/header :: header">
 	</header>
 	<page>
-		<form action="#" th:action="@{/2/newUser}" th:object="${user}" method="post">
+		<form action="#" th:action="@{/user/new}" th:object="${user}" method="post">
     		<h1 th:text="'New User:'"></h1>
     		<fieldset>
     			<label>Username:</label>

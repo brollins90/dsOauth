@@ -9,7 +9,7 @@
 	<header th:replace="fragments/header :: header">
 	</header>
 	<page>
-		<form action="#" th:action="@{/2/newClient}" th:object="${client}" method="post">
+		<form action="#" th:action="@{/client/new}" th:object="${client}" method="post">
     		<h1 th:text="'New Client '"></h1>
     		<fieldset>
     			<label>ClientId:</label>
