@@ -78,6 +78,7 @@ public class UserController {
 //        return "redirect:profile?username=" + username;
 //    }
 
+    //login through a seperate client
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity loginUser(@ModelAttribute("username") String username,
                                     @ModelAttribute("password") String password,
@@ -88,6 +89,9 @@ public class UserController {
                                     @ModelAttribute("state") String state,
                                     WebRequest request, HttpServletResponse response, Model model) {
 
+        if(redirect_uri.equals("")) {
+            return loginUserDirect(username, password, request, response, model );
+        }
         Map<String, Object> returnModel = new HashMap<>();
 
         System.out.println("redirect_uri: " + redirect_uri);
@@ -122,6 +126,41 @@ public class UserController {
         }
     }
 
+    //login through the oauth server
+    //@RequestMapping(value = "/login", method = RequestMethod.POST)
+    public ResponseEntity loginUserDirect(@ModelAttribute("username") String username,
+                                    @ModelAttribute("password") String password,
+                                    WebRequest request, HttpServletResponse response, Model model) {
+
+        Map<String, Object> returnModel = new HashMap<>();
+
+
+        User user = userService.findByUsernameAndPassword(username, password);
+
+        //TODO: Fix the redirects. If the user logs in, redirect them to the correct page, not their profile.
+
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+
+        if (user != null) {
+            System.out.println("user: " + user.getUsername());
+
+            //String authToken = atm.generateAuthToken(user);
+            com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
+            Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+            authCookie.setPath("/");
+            response.addCookie(authCookie);
+            model.addAttribute("user", user);
+            responseHeaders.add("location", "http://localhost:8080/user/profile?username=" + username);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+        } else {
+            System.out.println("User not found: " + username);
+            model.addAttribute("error", "User does not exist");
+            responseHeaders.add("location", "http://localhost:8080/user/login");
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+        }
+    }
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginPage(Model model,
                                 @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
@@ -130,6 +169,7 @@ public class UserController {
                                 @RequestParam(value = "response_type", required = true) String response_type,
                                 @RequestParam(value = "scope", required = false) String scope,
                                 @RequestParam(value = "state", required = false) String state) {
+
 
         if (!authToken.isEmpty()) {
             com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
@@ -147,6 +187,11 @@ public class UserController {
         parameters.state = state;
         model.addAttribute("authParams", parameters);
         return "login";
+    }
+
+    @RequestMapping(value = "/login2", method = RequestMethod.GET)
+    public String showLoginPage() {
+        return "loginclean";
     }
 
 //    @RequestMapping(value = "/permission", method = RequestMethod.GET)
