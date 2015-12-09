@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
 @Controller
+//@RestController
 public class TokenController {
 
     @Autowired
@@ -91,7 +91,7 @@ public class TokenController {
     @RequestMapping(value="/client/new", method=RequestMethod.POST)
     public String newClient(Model model, Client client) {
     	clientService.addClient(client);
-    	return "redirect:client?clientId=" + client.getClientId();
+    	return "redirect:/client?clientId=" + client.getClientId();
     }
 
     protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromClientCredentials(TokenParameters parameters) {
