@@ -1,6 +1,8 @@
 package com.oauth.authorization.web;
 
+import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.User;
+import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ import java.util.Map;
 @Controller
 @RequestMapping("/user")
 public class UserController {
+
+    @Autowired
+    private AccessTokenService accessTokenService;
 
     @Autowired
     private CookieService cookieService;
@@ -56,7 +61,7 @@ public class UserController {
         return "redirect:profile?username=" + user.getUsername();
     }
 
-    @RequestMapping("/permissions")
+    @RequestMapping(value = "/permissions", method = RequestMethod.GET) // TODO:
     public String permissionsList(String username, Model model) {
         User user = userService.findByUsername(username);
         if (user != null) {
@@ -67,6 +72,34 @@ public class UserController {
         } else {
             return "no user found";
         }
+    }
+
+    @RequestMapping(value = "/addpermission", method = RequestMethod.GET) // TODO:
+    public String permissionAdd(String username, Model model) {
+//        User user = userService.findByUsername(username);
+//        if (user != null) {
+//            model.addAttribute("user", user);
+//            model.addAttribute("username", username);
+//
+//            return "profile";
+//        } else {
+//            return "no user found";
+//        }
+        return "Not Yet Implemented exception :)";
+    }
+
+    @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
+    public String permissionAddPost(String username, Model model) {
+//        User user = userService.findByUsername(username);
+//        if (user != null) {
+//            model.addAttribute("user", user);
+//            model.addAttribute("username", username);
+//
+//            return "profile";
+//        } else {
+//            return "no user found";
+//        }
+        return "Not Yet Implemented exception :)";
     }
 
 //    @RequestMapping("/editProfile")
@@ -112,10 +145,34 @@ public class UserController {
             authCookie.setPath("/");
             response.addCookie(authCookie);
             model.addAttribute("user", user);
-            //returnModel.put("user", user);
-            // model.asMap().clear();
-            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
-            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+
+            // here we need to check if this user has given this client permissions before
+            Iterable<AccessToken> iterableTokens = accessTokenService.findByUsername(username);
+            AccessToken tokenForThisClient = null;
+            for (AccessToken t : iterableTokens) {
+                if (t.getUsername().equalsIgnoreCase(username) && t.getClientId().equalsIgnoreCase(client_id)) {
+                    tokenForThisClient = t;
+                }
+            }
+
+            if (tokenForThisClient == null) {
+                // show permission page
+                responseHeaders.add("location", "http://localhost:8080/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+            } else {
+                if (tokenForThisClient.getScope().equalsIgnoreCase(scope)) {
+                    // redirect because the permission has already been granted
+                    responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+                } else {
+                    // we have given this client some permissions, but not the one they are asking for.
+                    // do we prompt to change permissions or deny???
+                    responseHeaders.add("location", "http://localhost:8080/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+                }
+            }
+
+
         } else {
             System.out.println("User not found: " + username);
             //returnModel.put("error", "User does not exist");
