@@ -6,5 +6,7 @@ public interface AccessTokenService {
 
     AccessToken findByAccessToken(String accessToken);
 
+    Iterable<AccessToken> findByUsername(String username);
+
     AccessToken createAccessToken(String clientId, String username, String scope);
 }

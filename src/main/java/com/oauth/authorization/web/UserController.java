@@ -4,7 +4,6 @@ import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +34,7 @@ public class UserController {
         model.addAttribute("username", username);
         return "profile";
     }
-    
+
     @RequestMapping("/edit")
     public String edit(
             String username,
@@ -45,17 +43,30 @@ public class UserController {
         userService.updateUser(user, username);
         return "redirect:profile?username=" + username;
     }
-    
-    @RequestMapping(value="/new", method=RequestMethod.GET)
+
+    @RequestMapping(value = "/new", method = RequestMethod.GET)
     public String newUser(Model model) {
-    	model.addAttribute("user", new User());
+        model.addAttribute("user", new User());
         return "newUser";
     }
-    
-    @RequestMapping(value="/new", method=RequestMethod.POST)
+
+    @RequestMapping(value = "/new", method = RequestMethod.POST)
     public String newUser(Model model, User user) {
-    	userService.addUser(user);
-    	return "redirect:profile?username=" + user.getUsername();
+        userService.addUser(user);
+        return "redirect:profile?username=" + user.getUsername();
+    }
+
+    @RequestMapping("/permissions")
+    public String permissionsList(String username, Model model) {
+        User user = userService.findByUsername(username);
+        if (user != null) {
+            model.addAttribute("user", user);
+            model.addAttribute("username", username);
+
+            return "profile";
+        } else {
+            return "no user found";
+        }
     }
 
 //    @RequestMapping("/editProfile")
@@ -99,13 +110,13 @@ public class UserController {
             model.addAttribute("user", user);
             //returnModel.put("user", user);
             // model.asMap().clear();
-            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
+            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         } else {
             System.out.println("User not found: " + username);
             //returnModel.put("error", "User does not exist");
             model.addAttribute("error", "User does not exist");
-            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
+            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
             //responseHeaders.add("location", "/user/login?redirect_uri=" + redirect_uri);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
@@ -137,5 +148,49 @@ public class UserController {
         model.addAttribute("authParams", parameters);
         return "login";
     }
-    
+
+//    @RequestMapping(value = "/permission", method = RequestMethod.GET)
+//    public ResponseEntity loginUser(@ModelAttribute("username") String username,
+//                                    @ModelAttribute("password") String password,
+//                                    @ModelAttribute("redirect_uri") String redirect_uri,
+//                                    @ModelAttribute("response_type") String response_type,
+//                                    @ModelAttribute("client_id") String client_id,
+//                                    @ModelAttribute("scope") String scope,
+//                                    @ModelAttribute("state") String state,
+//                                    WebRequest request, HttpServletResponse response, Model model) {
+//
+//        Map<String, Object> returnModel = new HashMap<>();
+//
+//        System.out.println("redirect_uri: " + redirect_uri);
+//        User user = userService.findByUsernameAndPassword(username, password);
+//        //User user = userService.findByUsername(username);
+//
+//        //TODO: Fix the redirects. If the user logs in, redirect them to the correct page, not their profile.
+//
+//
+//        HttpHeaders responseHeaders = new HttpHeaders();
+//
+//        if (user != null) {
+//            System.out.println("user: " + user.getUsername());
+//
+//            //String authToken = atm.generateAuthToken(user);
+//            com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
+//            Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+//            authCookie.setPath("/");
+//            response.addCookie(authCookie);
+//            model.addAttribute("user", user);
+//            //returnModel.put("user", user);
+//            // model.asMap().clear();
+//            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
+//            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+//        } else {
+//            System.out.println("User not found: " + username);
+//            //returnModel.put("error", "User does not exist");
+//            model.addAttribute("error", "User does not exist");
+//            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id="+client_id+"&scope="+scope+"&response_type="+response_type+"&redirect_uri="+redirect_uri+"&state="+state);
+//            //responseHeaders.add("location", "/user/login?redirect_uri=" + redirect_uri);
+//            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+//        }
+//    }
+
 }

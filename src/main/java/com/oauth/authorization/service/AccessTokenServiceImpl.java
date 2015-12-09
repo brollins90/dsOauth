@@ -24,6 +24,12 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
+    public Iterable<AccessToken> findByUsername(String username) {
+        Assert.hasLength(username, "username cannot be empty");
+        return this.accessTokenRepository.findByUsername(username);
+    }
+
+    @Override
     public AccessToken createAccessToken(String clientId, String username, String scope) {
         if (scope == null) scope = "scopewasnull";
         AccessToken accessToken = new AccessToken(
