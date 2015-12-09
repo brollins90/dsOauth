@@ -1,36 +1,46 @@
-<html>
-<title>SimpleAM Login</title>
-
-
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link th:href="@{~/style.css}" rel="stylesheet"/>
+</head>
 <body>
+<header th:replace="fragments/header :: header">
+</header>
+<page>
 
-<div class="login-container">
-    <form method="POST" enctype="utf8" action="login" name="myForm">
-
-        <div class="form-group"><input type="text" name="redirect_uri" value="http://localhost:5000/login/oauthcallback"/></div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Username</label>
-
-            <div class="col-sm-9">
-                <input class="form-control" type="test" name="username" />
+    <div class="login-container">
+        <form action="#" th:action="@{/user/login}" th:object="${authParams}" method="post">
+            <div class="form-group">
+                <input type="hidden" name="response_type" th:field="*{response_type}"/>
+                <input type="hidden" name="client_id" th:field="*{client_id}"/>
+                <input type="hidden" name="redirect_uri" th:field="*{redirect_uri}"/>
+                <input type="hidden" name="scope" th:field="*{scope}"/>
+                <input type="hidden" name="state" th:field="*{state}"/>
             </div>
-        </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Username</label>
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Password</label>
-
-            <div class="col-sm-9">
-                <input class="form-control" type="password" name="password" />
+                <div class="col-sm-9">
+                    <input class="form-control" type="text" name="username"/>
+                </div>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-info">
-            <span class="glyphicon glyphicon-log-in gly-margin"></span>
-            Login
-        </button>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Password</label>
 
-    </form>
+                <div class="col-sm-9">
+                    <input class="form-control" type="password" name="password"/>
+                </div>
+            </div>
 
-</div>
+            <button type="submit" class="btn btn-info">
+                <span class="glyphicon glyphicon-log-in gly-margin"></span>
+                Login
+            </button>
+        </form>
+    </div>
+</page>
 </body>
 </html>

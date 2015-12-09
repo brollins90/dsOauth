@@ -62,72 +62,71 @@ public class Client implements Serializable {
         this.clientType = clientType;
     }
 
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
     public String getClientId() {
         return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getClientName() {
         return clientName;
     }
 
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
     public String getClientSecret() {
         return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
     }
 
     public String getClientPostLogoutRedirectUrl() {
         return clientPostLogoutRedirectUrl;
     }
 
+    public void setClientPostLogoutRedirectUrl(String clientPostLogoutRedirectUrl) {
+        this.clientPostLogoutRedirectUrl = clientPostLogoutRedirectUrl;
+    }
+
     public String getClientRedirectUrl() {
         return clientRedirectUrl;
+    }
+
+    public void setClientRedirectUrl(String clientRedirectUrl) {
+        this.clientRedirectUrl = clientRedirectUrl;
     }
 
     public List<String> getAllowedScopes() {
         return AllowedScopes;
     }
 
+    public void setAllowedScopes(List<String> allowedScopes) {
+        AllowedScopes = allowedScopes;
+    }
+
     public Flow getFlow() {
         return flow;
+    }
+
+    public void setFlow(Flow flow) {
+        this.flow = flow;
     }
 
     public ClientType getClientType() {
         return clientType;
     }
 
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
-
-	public void setClientName(String clientName) {
-		this.clientName = clientName;
-	}
-
-	public void setClientSecret(String clientSecret) {
-		this.clientSecret = clientSecret;
-	}
-
-	public void setClientPostLogoutRedirectUrl(String clientPostLogoutRedirectUrl) {
-		this.clientPostLogoutRedirectUrl = clientPostLogoutRedirectUrl;
-	}
-
-	public void setClientRedirectUrl(String clientRedirectUrl) {
-		this.clientRedirectUrl = clientRedirectUrl;
-	}
-
-	public void setAllowedScopes(List<String> allowedScopes) {
-		AllowedScopes = allowedScopes;
-	}
-
-	public void setFlow(Flow flow) {
-		this.flow = flow;
-	}
-
-	public void setClientType(ClientType clientType) {
-		this.clientType = clientType;
-	}
-    
+    public void setClientType(ClientType clientType) {
+        this.clientType = clientType;
+    }
 }

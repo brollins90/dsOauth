@@ -46,21 +46,23 @@ public class TokenController {
                                 @RequestParam(value = "state", required = false) String state,
                                 @RequestParam(value = "username", required = false) String username) {
         TokenParameters parameters = new TokenParameters();
-        parameters.setClientId(client_id);
-        parameters.setClientSecret(client_secret);
-        parameters.setCode(code);
-        parameters.setGrantType(grant_type);
-        parameters.setPassword(password);
-        parameters.setRedirectUri(redirect_uri);
-        parameters.setScope(scope);
-        parameters.setState(state);
-        parameters.setUsername(username);
+        parameters.client_id = client_id;
+        parameters.client_secret = client_secret;
+        parameters.code = code;
+        parameters.grant_type = grant_type;
+        parameters.password = password;
+        parameters.redirect_uri = redirect_uri;
+        parameters.scope = scope;
+        parameters.state = state;
+        parameters.username = username;
 
-        if (parameters.getGrantType().equalsIgnoreCase("authorization_code")) { // AuthorizationCode Flow Step 2
+        System.out.println("token endpoint");
+
+        if (parameters.grant_type.equalsIgnoreCase("authorization_code")) { // AuthorizationCode Flow Step 2
             return doGenerateTokenFromAuthCode(parameters);
-        } else if (parameters.getGrantType().equalsIgnoreCase("client_credentials")) { // ClientCredentials Flow
+        } else if (parameters.grant_type.equalsIgnoreCase("client_credentials")) { // ClientCredentials Flow
             return doGenerateTokenFromClientCredentials(parameters);
-        } else if (parameters.getGrantType().equalsIgnoreCase("password")) { // ResourceOwner Flow
+        } else if (parameters.grant_type.equalsIgnoreCase("password")) { // ResourceOwner Flow
             return doGenerateTokenFromPassword(parameters);
         } else {
             return new ResponseEntity("Invalid grant_type", HttpStatus.BAD_REQUEST);
@@ -101,14 +103,14 @@ public class TokenController {
     protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromAuthCode(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
-        AuthorizationCode authorizationCode = authorizationCodeService.findByAuthorizationCode(parameters.getCode());
+        AuthorizationCode authorizationCode = authorizationCodeService.findByAuthorizationCode(parameters.code);
 
         if (authorizationCode != null) {
 
             AccessToken accessToken = accessTokenService.createAccessToken(
-                    parameters.getClientId(),
+                    parameters.client_id,
                     authorizationCode.getUsername(),
-                    parameters.getScope());
+                    parameters.scope);
 
             responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
             responseHeaders.add("Cache-Control", "no-store");
@@ -159,7 +161,7 @@ public class TokenController {
     protected ResponseEntity doTokenError(TokenParameters parameters, String error) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.add("location", parameters.getRedirectUri() + "?error=" + error);
+        responseHeaders.add("location", parameters.redirect_uri + "?error=" + error);
         return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
     }
 }

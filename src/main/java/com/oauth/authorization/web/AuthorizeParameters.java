@@ -2,34 +2,34 @@ package com.oauth.authorization.web;
 
 public class AuthorizeParameters {
 
-    private String clientId;
-    private String redirectUri;
-    private String responseType;
-    private String scope;
-    private String state;
+    public String client_id;
+    public String redirect_uri;
+    public String response_type;
+    public String scope;
+    public String state;
 
-    public String getClientId() {
-        return clientId;
+    public String getClient_id() {
+        return client_id;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setClient_id(String client_id) {
+        this.client_id = client_id;
     }
 
-    public String getRedirectUri() {
-        return redirectUri;
+    public String getRedirect_uri() {
+        return redirect_uri;
     }
 
-    public void setRedirectUri(String redirectUri) {
-        this.redirectUri = redirectUri;
+    public void setRedirect_uri(String redirect_uri) {
+        this.redirect_uri = redirect_uri;
     }
 
-    public String getResponseType() {
-        return responseType;
+    public String getResponse_type() {
+        return response_type;
     }
 
-    public void setResponseType(String responseType) {
-        this.responseType = responseType;
+    public void setResponse_type(String response_type) {
+        this.response_type = response_type;
     }
 
     public String getScope() {

@@ -25,6 +25,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Override
     public AccessToken createAccessToken(String clientId, String username, String scope) {
+        if (scope == null) scope = "scopewasnull";
         AccessToken accessToken = new AccessToken(
                 this.generateAccessTokenString(),
                 clientId,
@@ -32,8 +33,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 "exapleTokenType",
                 3600l,
                 scope);
-
-        return null;
+        this.accessTokenRepository.save(accessToken);
+        return accessToken;
     }
 
     private String generateAccessTokenString() {

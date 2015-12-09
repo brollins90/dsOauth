@@ -37,25 +37,27 @@ public class AuthorizeController {
 
     @RequestMapping(path = "/oauth/authorize", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity authorize(
-            @RequestParam(value = "response_type", required = true) String response_type,
             @RequestParam(value = "client_id", required = true) String client_id,
             @RequestParam(value = "redirect_uri", required = false) String redirect_uri,
+            @RequestParam(value = "response_type", required = true) String response_type,
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "state", required = false) String state,
             HttpServletRequest request) {
 
         AuthorizeParameters parameters = new AuthorizeParameters();
-        parameters.setClientId(client_id);
-        parameters.setRedirectUri(redirect_uri);
-        parameters.setResponseType(response_type);
-        parameters.setScope(scope);
-        parameters.setState(state);
+        parameters.client_id = client_id;
+        parameters.redirect_uri = redirect_uri;
+        parameters.response_type = response_type;
+        parameters.scope = scope;
+        parameters.state = state;
 
-        if (parameters.getResponseType().equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
+        System.out.println("authorize endpoint");
+
+        if (parameters.response_type.equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
             return doAuthorizeCodeOrToken(parameters, request);
-        } else if (parameters.getResponseType().equalsIgnoreCase("token")) { // Implicit Flow
+        } else if (parameters.response_type.equalsIgnoreCase("token")) { // Implicit Flow
             return doAuthorizeCodeOrToken(parameters, request);
-        } else if (parameters.getResponseType().equalsIgnoreCase("jwt")) { // Jwt Flow
+        } else if (parameters.response_type.equalsIgnoreCase("jwt")) { // Jwt Flow
             return doAuthorizeJwt(parameters);
         } else {
             return new ResponseEntity("Invalid response_type", HttpStatus.BAD_REQUEST);
@@ -71,64 +73,69 @@ public class AuthorizeController {
     protected ResponseEntity doAuthorizeCodeOrToken(AuthorizeParameters parameters, HttpServletRequest request) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
-        String state = (parameters.getState() != null) ? "&state=" + parameters.getState() : "";
+        String state = (parameters.state != null) ? "&state=" + parameters.state : "";
 
-        Client client = clientService.findClient(parameters.getClientId());
+        Client client = clientService.findClient(parameters.client_id);
 
         // check the client id
         if (client == null) {
-            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=bad_client_id");
+            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=bad_client_id");
             return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
         }
 
         // check the resource matches URL
-        if (!client.getClientRedirectUrl().equalsIgnoreCase(parameters.getRedirectUri())) {
-            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=url_dont_match");
+        if (!client.getClientRedirectUrl().equalsIgnoreCase(parameters.redirect_uri)) {
+            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=url_dont_match");
             return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
         }
 
         // we need to show login page, unless we are already logged in
         String username = isLoggedIn(request);
         if (username == null) {
-            responseHeaders.add("location", "/user/login" + "?redirect_uri=" + parameters.getRedirectUri() + state);
+            responseHeaders.add("location", "/user/login"
+                    + "?client_id=" + parameters.client_id
+                    + "&redirect_uri=" + parameters.redirect_uri
+                    + "&response_type=" + parameters.response_type
+                    + "&scope=" + parameters.scope
+                    + state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
 
         // TODO: possibly show an authorize page if it hasnt been requested before
 
         // check if scope is allowed (both on resource and allow the the user has given the permission)
-        if (!client.getAllowedScopes().contains(parameters.getScope())) {
-            responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=client_doesnt_have_this_scope");
+        if (!client.getAllowedScopes().contains(parameters.scope)) {
+            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doesnt_have_this_scope");
             return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
         }
 
-        if (parameters.getResponseType().equalsIgnoreCase("code")) {
+        if (parameters.response_type.equalsIgnoreCase("code")) {
 
-            if (!client.getFlow().toString().equalsIgnoreCase("code")) {
-                responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
+            if (!client.getFlow().toString().equalsIgnoreCase("AuthorizationCode")) {
+                responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
                 return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
             } else {
 
-                AuthorizationCode authorizationCode = authorizationCodeService.createAuthorizationCode(parameters.getClientId(), username);
-                responseHeaders.add("location", parameters.getRedirectUri() + "?code=" + authorizationCode.getAuthorizationCode() + state);
+                AuthorizationCode authorizationCode = authorizationCodeService.createAuthorizationCode(parameters.client_id, username);
+                responseHeaders.add("location", parameters.redirect_uri + "?code=" + authorizationCode.getAuthorizationCode() + state);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             }
 
-        } else if (parameters.getResponseType().equalsIgnoreCase("token")) {
+        } else if (parameters.response_type.equalsIgnoreCase("token")) {
 
             if (!client.getFlow().toString().equalsIgnoreCase("implicit")) {
-                responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
+                responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
                 return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
             } else {
 
-                AccessToken accessToken = accessTokenService.createAccessToken(parameters.getClientId(), username, parameters.getScope());
+                AccessToken accessToken = accessTokenService.createAccessToken(parameters.client_id, username, parameters.scope);
 
                 // TODO: If the resource owner grants the access request, the authorization
                 // server issues an access token and delivers it to the client by adding
                 // the following parameters to the fragment component of the redirection
                 // URI using the "application/x-www-form-urlencoded" format, per Appendix B
                 responseHeaders.add("location",
-                        parameters.getRedirectUri() +
+                        parameters.redirect_uri +
                                 "?access_token=" + accessToken.getAccessToken() +
                                 "&token_type=" + accessToken.getTokenType() +
                                 "&expires_in=" + accessToken.getExpiration() +
@@ -140,7 +147,7 @@ public class AuthorizeController {
 
 
         // we shouldn't ever get here
-        responseHeaders.add("location", parameters.getRedirectUri() + "?error=access_denied" + state + "?error_description=bad_juju");
+        responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=bad_juju");
         return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
     }
 
