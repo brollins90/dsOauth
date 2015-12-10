@@ -12,14 +12,7 @@
 
     <div class="login-container">
         <form action="#" th:action="@{/user/login}" th:object="${authParams}" method="post">
-            <div class="form-group">
-                <input type="hidden" name="response_type" th:field="*{response_type}"/>
-                <input type="hidden" name="client_id" th:field="*{client_id}"/>
-                <input type="hidden" name="redirect_uri" th:field="*{redirect_uri}"/>
-                <input type="hidden" name="scope" th:field="*{scope}"/>
-                <input type="hidden" name="state" th:field="*{state}"/>
-            </div>
-            <div class="form-group">
+                       <div class="form-group">
                 <label class="col-sm-2 control-label">Username</label>
 
                 <div class="col-sm-9">

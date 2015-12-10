@@ -1,24 +1,69 @@
-package com.oauth.authorization.model.implementation;
+package com.oauth.authorization.domain;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by brollins on 12/1/2015.
- */
-public class Client {
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
 
+@Entity
+public class Client implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(nullable = false)
     private String clientId;
-    private String clientName;
-    private String clientSecret;
-    private String clientPostLogoutRedirectUrl;
-    private String clientRedirectUrl;
-    private List<String> AllowedScopes;
-    private Flow flow;
-    private ClientType clientType;
 
+    @Column(nullable = false)
+    private String clientName;
+
+    @Column(nullable = false)
+    private String clientSecret;
+
+    @Column(nullable = false)
+    private String clientPostLogoutRedirectUrl;
+
+    @Column(nullable = false)
+    private String clientRedirectUrl;
+
+    @ElementCollection
+    private List<String> AllowedScopes;
+
+    @Enumerated(EnumType.STRING)
+    private Flow flow;
+
+    @Enumerated(EnumType.STRING)
+    private ClientType clientType;
+    
     public Client() {
         AllowedScopes = new ArrayList<>();
+        AllowedScopes.add("name");
+        AllowedScopes.add("email");
+        AllowedScopes.add("phone");
+        clientType = ClientType.Confidential;
+        flow = Flow.AuthorizationCode;
+    }
+
+    public Client(String clientId, String clientName, String clientSecret, String clientPostLogoutRedirectUrl,
+                  String clientRedirectUrl, List<String> allowedScopes, Flow flow, ClientType clientType) {
+        this.clientId = clientId;
+        this.clientName = clientName;
+        this.clientSecret = clientSecret;
+        this.clientPostLogoutRedirectUrl = clientPostLogoutRedirectUrl;
+        this.clientRedirectUrl = clientRedirectUrl;
+        AllowedScopes = allowedScopes;
+        this.flow = flow;
+        this.clientType = clientType;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
     }
 
     public String getClientId() {
@@ -65,8 +110,8 @@ public class Client {
         return AllowedScopes;
     }
 
-    public void addAllowedScopes(String scope) {
-        AllowedScopes.add(scope);
+    public void setAllowedScopes(List<String> allowedScopes) {
+        AllowedScopes = allowedScopes;
     }
 
     public Flow getFlow() {
