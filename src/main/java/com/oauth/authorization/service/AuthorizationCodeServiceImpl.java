@@ -26,15 +26,14 @@ public class AuthorizationCodeServiceImpl implements AuthorizationCodeService {
     @Override
     public AuthorizationCode createAuthorizationCode(String clientId, String username) {
         AuthorizationCode authorizationCode = new AuthorizationCode(
-                this.generateAuthorizationCodeString(),
+                this.generateAuthorizationCodeString(username),
                 clientId,
                 username);
-        this.authorizationCodeRepository.save(authorizationCode);
-        return authorizationCode;
+        return this.authorizationCodeRepository.save(authorizationCode);
     }
 
-    private String generateAuthorizationCodeString() {
+    private String generateAuthorizationCodeString(String username) {
 //        return Base64.getEncoder().encodeToString((clientID + UUID.randomUUID()).getBytes());
-        return "BLAKEISCOOL";
+        return "BLAKEISCOOL"+username;
     }
 }

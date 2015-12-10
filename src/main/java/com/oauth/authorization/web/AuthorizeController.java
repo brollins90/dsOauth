@@ -37,9 +37,9 @@ public class AuthorizeController {
 
     @RequestMapping(path = "/oauth/authorize", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity authorize(
-            @RequestParam(value = "client_id", required = true) String client_id,
+            @RequestParam(value = "client_id", required = false) String client_id,
             @RequestParam(value = "redirect_uri", required = false) String redirect_uri,
-            @RequestParam(value = "response_type", required = true) String response_type,
+            @RequestParam(value = "response_type", required = false) String response_type,
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "state", required = false) String state,
             HttpServletRequest request) {
@@ -49,9 +49,46 @@ public class AuthorizeController {
         parameters.redirect_uri = redirect_uri;
         parameters.response_type = response_type;
         parameters.scope = scope;
-        parameters.state = state;
+        parameters.state = (state != null) ? "&state=" + state : "";
 
-        System.out.println("authorize endpoint");
+        StringBuilder sb = new StringBuilder();
+        sb.append("/oauth/authorize?");
+        if (parameters.client_id != null) sb.append("client_id=" + parameters.client_id + "&");
+        if (parameters.redirect_uri != null) sb.append("redirect_uri=" + parameters.redirect_uri + "&");
+        if (parameters.response_type != null) sb.append("response_type=" + parameters.response_type + "&");
+        if (parameters.scope != null) sb.append("scope=" + parameters.scope + "&");
+        if (parameters.state != null) sb.append("state=" + parameters.state + "&");
+        System.out.println(sb.toString().substring(0, sb.toString().length()-2));
+
+        // because 400 and 500 error codes are not valid in the oauth spec, we need to not require
+        // the required attributes so we can redirect the response instead of the normal spring way
+//        if (parameters.redirect_uri == null) { // TODO: how do we redirect them if the redirect_uri is not here?
+//            HttpHeaders responseHeaders = new HttpHeaders();
+//            responseHeaders.add("location",
+//                    parameters.redirect_uri
+//                            + "?error=invalid_request"
+//                            + "&error_description=redirect_uri%20is%20required"
+//                            + state);
+//            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
+//        }
+        if (parameters.client_id == null) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.add("location",
+                    parameters.redirect_uri
+                            + "?error=invalid_request"
+                            + "&error_description=client_id%20is%20required"
+                            + state);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
+        }
+        if (parameters.response_type == null) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.add("location",
+                    parameters.redirect_uri
+                            + "?error=invalid_request"
+                            + "&error_description=response_type%20is%20required"
+                            + state);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
+        }
 
         if (parameters.response_type.equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
             return doAuthorizeCodeOrToken(parameters, request);
@@ -60,7 +97,7 @@ public class AuthorizeController {
         } else if (parameters.response_type.equalsIgnoreCase("jwt")) { // Jwt Flow
             return doAuthorizeJwt(parameters);
         } else {
-            return new ResponseEntity("Invalid response_type", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity("unsupported_response_type", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -73,31 +110,40 @@ public class AuthorizeController {
     protected ResponseEntity doAuthorizeCodeOrToken(AuthorizeParameters parameters, HttpServletRequest request) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
-        String state = (parameters.state != null) ? "&state=" + parameters.state : "";
+        String state = parameters.state;
 
         Client client = clientService.findClient(parameters.client_id);
 
         // check the client id
         if (client == null) {
-            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=bad_client_id");
-            return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+            responseHeaders.add("location",
+                    parameters.redirect_uri
+                            + "?error=access_denied"
+                            + "&error_description=bad_client_id"
+                            + state);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
         }
 
         // check the resource matches URL
         if (!client.getClientRedirectUrl().equalsIgnoreCase(parameters.redirect_uri)) {
-            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=url_dont_match");
-            return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+            responseHeaders.add("location",
+                    parameters.redirect_uri
+                            + "?error=access_denied"
+                            + "&error_description=redirect_uri_dont_match"
+                            + state);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
         }
 
         // we need to show login page, unless we are already logged in
         String username = isLoggedIn(request);
         if (username == null) {
-            responseHeaders.add("location", "/user/login"
-                    + "?client_id=" + parameters.client_id
-                    + "&redirect_uri=" + parameters.redirect_uri
-                    + "&response_type=" + parameters.response_type
-                    + "&scope=" + parameters.scope
-                    + state);
+            responseHeaders.add("location",
+                    "/user/login"
+                            + "?client_id=" + parameters.client_id
+                            + "&redirect_uri=" + parameters.redirect_uri
+                            + "&response_type=" + parameters.response_type
+                            + "&scope=" + parameters.scope
+                            + state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
 
@@ -105,27 +151,42 @@ public class AuthorizeController {
 
         // check if scope is allowed (both on resource and allow the the user has given the permission)
         if (!client.getAllowedScopes().contains(parameters.scope)) {
-            responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doesnt_have_this_scope");
-            return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+            responseHeaders.add("location",
+                    parameters.redirect_uri
+                            + "?error=invalid_scope"
+                            + "&error_description=The%20requested%20scope%20is%20invalid%20unknown%20or%20malformed"
+                            + state);
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
         }
 
         if (parameters.response_type.equalsIgnoreCase("code")) {
 
             if (!client.getFlow().toString().equalsIgnoreCase("AuthorizationCode")) {
-                responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
-                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+                responseHeaders.add("location",
+                        parameters.redirect_uri
+                                + "?error=unauthorized_client"
+                                + "&error_description=The%20client%20is%20not%20authorized%20to%20request%20an%20authorization%20code%20using%20this%20method"
+                                + state);
+                return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
             } else {
 
                 AuthorizationCode authorizationCode = authorizationCodeService.createAuthorizationCode(parameters.client_id, username);
-                responseHeaders.add("location", parameters.redirect_uri + "?code=" + authorizationCode.getAuthorizationCode() + state);
+                responseHeaders.add("location",
+                        parameters.redirect_uri
+                                + "?code=" + authorizationCode.getAuthorizationCode()
+                                + state);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             }
 
         } else if (parameters.response_type.equalsIgnoreCase("token")) {
 
             if (!client.getFlow().toString().equalsIgnoreCase("implicit")) {
-                responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=client_doest_get_to_do_this_flow");
-                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+                responseHeaders.add("location",
+                        parameters.redirect_uri
+                                + "?error=unauthorized_client"
+                                + "&error_description=The%20client%20is%20not%20authorized%20to%20request%20an%20authorization%20code%20using%20this%20method"
+                                + state);
+                return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
             } else {
 
                 AccessToken accessToken = accessTokenService.createAccessToken(parameters.client_id, username, parameters.scope);
@@ -135,20 +196,23 @@ public class AuthorizeController {
                 // the following parameters to the fragment component of the redirection
                 // URI using the "application/x-www-form-urlencoded" format, per Appendix B
                 responseHeaders.add("location",
-                        parameters.redirect_uri +
-                                "?access_token=" + accessToken.getAccessToken() +
-                                "&token_type=" + accessToken.getTokenType() +
-                                "&expires_in=" + accessToken.getExpiration() +
-                                "&scope=" + accessToken.getScope() +
-                                state);
+                        parameters.redirect_uri
+                                + "?access_token=" + accessToken.getAccessToken()
+                                + "&token_type=" + accessToken.getTokenType()
+                                + "&expires_in=" + accessToken.getExpiration()
+                                + "&scope=" + accessToken.getScope()
+                                + state);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             }
         }
 
-
         // we shouldn't ever get here
-        responseHeaders.add("location", parameters.redirect_uri + "?error=access_denied" + state + "?error_description=bad_juju");
-        return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+        responseHeaders.add("location",
+                parameters.redirect_uri
+                        + "?error=server_error"
+                        + "&error_description=bad_juju"
+                        + state);
+        return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
     }
 
     protected String isLoggedIn(HttpServletRequest request) {

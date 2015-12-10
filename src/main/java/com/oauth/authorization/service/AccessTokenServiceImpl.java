@@ -33,17 +33,16 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     public AccessToken createAccessToken(String clientId, String username, String scope) {
         if (scope == null) scope = "scopewasnull";
         AccessToken accessToken = new AccessToken(
-                this.generateAccessTokenString(),
+                this.generateAccessTokenString(username),
                 clientId,
                 username,
                 "exapleTokenType",
                 3600l,
                 scope);
-        this.accessTokenRepository.save(accessToken);
-        return accessToken;
+        return this.accessTokenRepository.save(accessToken);
     }
 
-    private String generateAccessTokenString() {
-        return "AndThisIsAToken";
+    private String generateAccessTokenString(String username) {
+        return "AndThisIsAToken"+username;
     }
 }

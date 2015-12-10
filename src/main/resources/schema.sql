@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS AccessToken;
+CREATE TABLE IF NOT EXISTS AccessToken (accessToken VARCHAR(256) PRIMARY KEY, clientId VARCHAR(256), username VARCHAR(256), tokenType VARCHAR(256), expiration BIGINT, scope VARCHAR(256));
+
+DROP TABLE IF EXISTS AuthorizationCode;
+CREATE TABLE IF NOT EXISTS AuthorizationCode (authorizationCode VARCHAR(256) PRIMARY KEY, clientId VARCHAR(256), username VARCHAR(256), createTime BIGINT);
+
+DROP TABLE IF EXISTS Client;
+CREATE TABLE IF NOT EXISTS Client (clientId VARCHAR(256) PRIMARY KEY, clientName VARCHAR(256), clientSecret VARCHAR(256), clientPostLogoutRedirectUrl VARCHAR(256), clientRedirectUrl VARCHAR(256), allowedScopes VARCHAR(256), flow VARCHAR(256), clientType VARCHAR(256));
+
+DROP TABLE IF EXISTS Cookie;
+CREATE TABLE IF NOT EXISTS Cookie (cookie VARCHAR(256) PRIMARY KEY, username VARCHAR(256));
+
+DROP TABLE IF EXISTS User;
+CREATE TABLE IF NOT EXISTS User(username VARCHAR(256) PRIMARY KEY, password VARCHAR(256), name VARCHAR(256), email VARCHAR(256), phone VARCHAR(256));

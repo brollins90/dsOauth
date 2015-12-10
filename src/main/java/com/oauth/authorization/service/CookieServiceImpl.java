@@ -28,8 +28,7 @@ public class CookieServiceImpl implements CookieService {
         Cookie cookie = new Cookie(
                 this.generateCookieString(),
                 username);
-        this.cookieRepository.save(cookie);
-        return cookie;
+        return this.cookieRepository.save(cookie);
     }
 
     private String generateCookieString() {
