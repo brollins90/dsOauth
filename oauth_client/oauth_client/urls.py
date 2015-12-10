@@ -24,4 +24,6 @@ urlpatterns = [
 
     url(r'^',include('apps.pointless.urls')),
 
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+
 ]

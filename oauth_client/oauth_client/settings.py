@@ -38,11 +38,13 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.pointless',
-    'oauth2_provider'
+    'oauth2_provider',
+    'corsheaders'
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -113,3 +115,5 @@ SITE_ID = 1
 #TODO is this needed?
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
+
+CORS_ORIGIN_ALLOW_ALL = True
