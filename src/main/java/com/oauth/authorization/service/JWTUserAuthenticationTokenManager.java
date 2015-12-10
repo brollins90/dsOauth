@@ -1,6 +1,7 @@
-package com.oauth.fakebookApplication.model.implementation;
+package com.oauth.authorization.service;
 
-import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
+import com.oauth.authorization.domain.User;
+import com.oauth.fakebookApplication.model.implementation.FakebookUser;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -13,13 +14,13 @@ public class JWTUserAuthenticationTokenManager implements UserAuthenticationToke
     public static final String tokenKeyString = "Blake<3LovesMatt_xoxox!";
 
     @Override
-    public String generateAuthToken(FakebookUser user) {
+    public String generateAuthToken(User user) {
 
         byte[] key = tokenKeyString.getBytes();
 
-        String compact = Jwts.builder().claim("username", user.getName())
+        String compact = Jwts.builder().claim("username", user.getUsername())
                 .claim("email", user.getEmail())
-                .claim("userId", user.getUserId()).setSubject("Auth-Token").setIssuer("capstone.com").setIssuedAt(DateTime.now().toDate())
+                .setIssuer("dist-systems-oauth").setIssuedAt(DateTime.now().toDate())
                 .signWith(SignatureAlgorithm.HS256, key).compact();
 
         return compact;
@@ -49,17 +50,16 @@ public class JWTUserAuthenticationTokenManager implements UserAuthenticationToke
     }
 
     @Override
-    public FakebookUser getUserFromToken(String authToken) {
-        FakebookUser user = new FakebookUser();
+    public User getUserFromToken(String authToken) {
+        User user = new User();
 
         try {
             Jwt s = Jwts.parser().setSigningKey(tokenKeyString.getBytes())
                     .parse(authToken);
 
             DefaultClaims ss = (DefaultClaims) s.getBody();
-            user.setName((String) ss.get("username"));
+            user.setUsername((String) ss.get("username"));
             user.setEmail((String) ss.get("email"));
-            user.setUserId((int) ss.get("userId"));
 
         } catch (SignatureException e) {
             System.out.println("bad jwt");

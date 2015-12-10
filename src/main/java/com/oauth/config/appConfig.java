@@ -1,7 +1,7 @@
 package com.oauth.config;
 
-import com.oauth.fakebookApplication.model.UserAuthenticationTokenManager;
-import com.oauth.fakebookApplication.model.implementation.JWTUserAuthenticationTokenManager;
+import com.oauth.authorization.service.UserAuthenticationTokenManager;
+import com.oauth.authorization.service.JWTUserAuthenticationTokenManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

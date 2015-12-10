@@ -4,6 +4,7 @@ import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.CookieService;
+import com.oauth.authorization.service.UserAuthenticationTokenManager;
 import com.oauth.authorization.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -32,12 +33,28 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserAuthenticationTokenManager atm;
+
     @RequestMapping("/profile")
-    public String view(String username, Model model) {
-        User user = userService.findByUsername(username);
-        model.addAttribute("user", user);
-        model.addAttribute("username", username);
-        return "profile";
+    public ResponseEntity view(String username, Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        if(!authToken.isEmpty()) {
+            String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            User user = userService.findByUsername(username);
+            model.addAttribute("user", user);
+            model.addAttribute("username", username);
+
+
+            if(loggedInUserName.equals(username)) {
+                return new ResponseEntity("profile", HttpStatus.OK);
+            } else {
+                responseHeaders.add("location", "http://localhost:8080/user/login2");
+                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN); //trying to access someone else's profile
+            }
+        } else {
+            return new ResponseEntity(responseHeaders, HttpStatus.UNAUTHORIZED); //no one is logged in
+        }
     }
 
     @RequestMapping("/edit")
@@ -56,8 +73,14 @@ public class UserController {
     }
 
     @RequestMapping(value = "/new", method = RequestMethod.POST)
-    public String newUser(Model model, User user) {
+    public String newUser(Model model, User user, HttpServletResponse response) {
         userService.addUser(user);
+        String authToken = atm.generateAuthToken(user);
+        //com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
+        //Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+        Cookie authCookie = new Cookie("Auth-Token", authToken);
+        authCookie.setPath("/");
+        response.addCookie(authCookie);
         return "redirect:profile?username=" + user.getUsername();
     }
 
@@ -139,9 +162,10 @@ public class UserController {
         if (user != null) {
             System.out.println("user: " + user.getUsername());
 
-            //String authToken = atm.generateAuthToken(user);
-            com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
-            Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+            String authToken = atm.generateAuthToken(user);
+            //com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
+            //Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+            Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
             model.addAttribute("user", user);
@@ -202,13 +226,15 @@ public class UserController {
         if (user != null) {
             System.out.println("user: " + user.getUsername());
 
-            //String authToken = atm.generateAuthToken(user);
-            com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
-            Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+
+            String authToken = atm.generateAuthToken(user);
+            //com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
+            //Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
+            Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
             model.addAttribute("user", user);
-            responseHeaders.add("location", "http://localhost:8080/user/profile?username=" + username);
+
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         } else {
             System.out.println("User not found: " + username);
@@ -229,12 +255,12 @@ public class UserController {
 
 
         if (!authToken.isEmpty()) {
-            com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
-            if (cookie != null) {
-                User user = userService.findByUsername(cookie.getUsername());
+           // com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
+           // if (cookie != null) {
+                User user = userService.findByUsername(atm.getUserFromToken(authToken).getUsername());
 
                 model.addAttribute("user", user);
-            }
+            //}
         }
         AuthorizeParameters parameters = new AuthorizeParameters();
         parameters.client_id = client_id;
