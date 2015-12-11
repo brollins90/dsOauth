@@ -6,6 +6,7 @@ import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserAuthenticationTokenManager;
 import com.oauth.authorization.service.UserService;
+import org.omg.CORBA.portable.ResponseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,10 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,23 +41,32 @@ public class UserController {
     private UserAuthenticationTokenManager atm;
 
     @RequestMapping("/profile")
-    public ResponseEntity view(String username, Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken) {
-        HttpHeaders responseHeaders = new HttpHeaders();
-        if(!authToken.isEmpty()) {
+    public String view(String username, Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken, HttpServletResponse response) {
+
+        if (!authToken.isEmpty()) {
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
             User user = userService.findByUsername(username);
-            model.addAttribute("user", user);
-            model.addAttribute("username", username);
 
+            if (user == null) {
+                try {
+                    response.sendError(501, "User does not exist");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return "loginclean";
+            }
 
-            if(loggedInUserName.equals(username)) {
-                return new ResponseEntity("profile", HttpStatus.OK);
+            if (loggedInUserName.equals(username)) {
+                model.addAttribute("user", user);
+                model.addAttribute("username", username);
+                return "profile";
             } else {
-                responseHeaders.add("location", "http://localhost:8080/user/login2");
-                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN); //trying to access someone else's profile
+                response.setStatus(401);
+                return "loginclean";
             }
         } else {
-            return new ResponseEntity(responseHeaders, HttpStatus.UNAUTHORIZED); //no one is logged in
+            response.setStatus(401);
+            return "loginclean";
         }
     }
 
@@ -61,9 +74,19 @@ public class UserController {
     public String edit(
             String username,
             User user,
-            Model model) {
+            Model model,
+            HttpServletResponse response) {
         userService.updateUser(user, username);
-        return "redirect:profile?username=" + username;
+        if (!username.equals("")) {
+            return "redirect:profile?username=" + username;
+        } else {
+            try {
+                response.sendError(501, "User does not exist");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return "loginclean";
+        }
     }
 
     @RequestMapping(value = "/new", method = RequestMethod.GET)
@@ -122,6 +145,9 @@ public class UserController {
 //        } else {
 //            return "no user found";
 //        }
+        //if yes and no code -> redirect to authorize
+
+        //if yes and code -> redirect to
         return "Not Yet Implemented exception :)";
     }
 
@@ -145,8 +171,8 @@ public class UserController {
                                     @ModelAttribute("state") String state,
                                     WebRequest request, HttpServletResponse response, Model model) {
 
-        if(redirect_uri.equals("")) {
-            return loginUserDirect(username, password, request, response, model );
+        if (redirect_uri.equals("")) {
+            return loginUserDirect(username, password, request, response, model);
         }
         Map<String, Object> returnModel = new HashMap<>();
 
@@ -163,8 +189,6 @@ public class UserController {
             System.out.println("user: " + user.getUsername());
 
             String authToken = atm.generateAuthToken(user);
-            //com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
-            //Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
             Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
@@ -199,10 +223,8 @@ public class UserController {
 
         } else {
             System.out.println("User not found: " + username);
-            //returnModel.put("error", "User does not exist");
             model.addAttribute("error", "User does not exist");
             responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
-            //responseHeaders.add("location", "/user/login?redirect_uri=" + redirect_uri);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
     }
@@ -210,8 +232,8 @@ public class UserController {
     //login through the oauth server
     //@RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity loginUserDirect(@ModelAttribute("username") String username,
-                                    @ModelAttribute("password") String password,
-                                    WebRequest request, HttpServletResponse response, Model model) {
+                                          @ModelAttribute("password") String password,
+                                          WebRequest request, HttpServletResponse response, Model model) {
 
         Map<String, Object> returnModel = new HashMap<>();
 
@@ -228,8 +250,6 @@ public class UserController {
 
 
             String authToken = atm.generateAuthToken(user);
-            //com.oauth.authorization.domain.Cookie ourCookie = cookieService.createCookie(user.getUsername());
-            //Cookie authCookie = new Cookie("Auth-Token", ourCookie.getCookie());
             Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
@@ -253,14 +273,9 @@ public class UserController {
                                 @RequestParam(value = "scope", required = false) String scope,
                                 @RequestParam(value = "state", required = false) String state) {
 
-
         if (!authToken.isEmpty()) {
-           // com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(authToken);
-           // if (cookie != null) {
-                User user = userService.findByUsername(atm.getUserFromToken(authToken).getUsername());
-
-                model.addAttribute("user", user);
-            //}
+            User user = userService.findByUsername(atm.getUserFromToken(authToken).getUsername());
+            model.addAttribute("user", user);
         }
         AuthorizeParameters parameters = new AuthorizeParameters();
         parameters.client_id = client_id;
@@ -272,7 +287,7 @@ public class UserController {
         return "login";
     }
 
-    @RequestMapping(value = "/login2", method = RequestMethod.GET)
+    @RequestMapping(value = "/userlogin", method = RequestMethod.GET)
     public String showLoginPage() {
         return "loginclean";
     }
