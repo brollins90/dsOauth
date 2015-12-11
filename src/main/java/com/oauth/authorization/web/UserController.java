@@ -138,19 +138,23 @@ public class UserController {
     		Model model, 
     		HttpServletResponse response) {
         if(!authToken.isEmpty()) {
+        	AuthorizeParameters authParams = new AuthorizeParameters();
+        	authParams.setClient_id(client_id);
+        	authParams.setRedirect_uri(redirect_uri);
+        	authParams.setResponse_type(response_type);
+        	authParams.setScope(scope);
+        	authParams.setState(state);
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
             User user = userService.findByUsername(username);
             model.addAttribute("user", user);
             model.addAttribute("username", username);
-            model.addAttribute("scope", scope);
-            model.addAttribute("authParams", new AuthorizeParameters());
+            model.addAttribute("authParams", authParams);
             Client client = clientService.findClient(client_id);
             if(client == null) {
             	return null;
             }
             else {
-	            model.addAttribute("client", client.getClientName());
-	
+            	model.addAttribute("client", client.getClientName());
 	            if(loggedInUserName.equals(username)) {
 	                return "addPermission";
 	            } else {
@@ -165,20 +169,46 @@ public class UserController {
     }
 
     @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
-    public String permissionAddPost(String username, Model model) {
-//        User user = userService.findByUsername(username);
-//        if (user != null) {
-//            model.addAttribute("user", user);
-//            model.addAttribute("username", username);
-//
-//            return "profile";
-//        } else {
-//            return "no user found";
-//        }
+    public String permissionAddPost(
+    		@CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+    		String username, 
+    		String client_id, 
+    		String scope, 
+    		String response_type, 
+    		String redirect_uri, 
+    		String state, 
+    		Model model, 
+    		HttpServletResponse response) {
+    	
+    	if(!authToken.isEmpty()) {
+            String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            User user = userService.findByUsername(username);
+            model.addAttribute("user", user);
+            model.addAttribute("username", username);
+            model.addAttribute("scope", scope);
+            model.addAttribute("authParams", new AuthorizeParameters());
+            Client client = clientService.findClient(client_id);
+            if(client == null) {
+            	return null;
+            }
+            else {
+	            model.addAttribute("client", client.getClientName());
+	
+	            if(loggedInUserName.equals(username)) {
+	                return "redirect:http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state;
+	            } else {
+	            	response.setStatus(401);
+	                return "loginclean"; //trying to access someone else's profile
+	            }
+            }
+        } else {
+        	response.setStatus(401);
+            return "loginclean"; //no one is logged in
+        }
         //if yes and no code -> redirect to authorize
 
         //if yes and code -> redirect to
-        return "Not Yet Implemented exception :)";
+//        return "Not Yet Implemented exception :)";
     }
 
 //    @RequestMapping("/editProfile")
