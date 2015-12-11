@@ -34,8 +34,8 @@ public class UserController {
     @Autowired
     private AccessTokenService accessTokenService;
 
-    @Autowired
-    private CookieService cookieService;
+//    @Autowired
+//    private CookieService cookieService;
 
     @Autowired
     private UserService userService;
@@ -151,7 +151,7 @@ public class UserController {
             model.addAttribute("authParams", authParams);
             Client client = clientService.findClient(client_id);
             if(client == null) {
-            	return null;
+            	return "Error, client not found";
             }
             else {
             	model.addAttribute("client", client.getClientName());

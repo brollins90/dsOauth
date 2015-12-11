@@ -37,9 +37,9 @@ public class AuthorizeController {
     @Autowired
     private ClientService clientService;
 
-    @Autowired
-    private CookieService cookieService;
-    
+//    @Autowired
+//    private CookieService cookieService;
+//    
     @Autowired
     private UserAuthenticationTokenManager atm;
 
@@ -226,37 +226,39 @@ public class AuthorizeController {
         return new ResponseEntity(responseHeaders, HttpStatus.FOUND); // Http code on error is still a redirect
     }
 
-    protected String isLoggedIn(HttpServletRequest request) {
-        boolean loggedIn = true;
-
-        if (request.getCookies() != null) {
-            System.out.println("found some cookies!");
-
-            Cookie cookieValue = null;
-            Cookie[] cookies = request.getCookies();
-
-            for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals("Auth-Token")) {
-                    cookieValue = cookies[i];
-                    break;
-                }
-            }
-
-            if (cookieValue != null) {
-                com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(cookieValue.getValue());
-                if (cookie != null) {
-                    return cookie.getUsername();
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-
-        } else {
-            return null;
-        }
-    }
+// this is loggged in wasn't working because cookies were never being saved,
+// but also we just use the built in cookies now, not custom ones
+//    protected String isLoggedIn(HttpServletRequest request) {
+//        boolean loggedIn = true;
+//
+//        if (request.getCookies() != null) {
+//            System.out.println("found some cookies!");
+//
+//            Cookie cookieValue = null;
+//            Cookie[] cookies = request.getCookies();
+//
+//            for (int i = 0; i < cookies.length; i++) {
+//                if (cookies[i].getName().equals("Auth-Token")) {
+//                    cookieValue = cookies[i];
+//                    break;
+//                }
+//            }
+//
+//            if (cookieValue != null) {
+//                com.oauth.authorization.domain.Cookie cookie = cookieService.findByCookie(cookieValue.getValue());
+//                if (cookie != null) {
+//                    return cookie.getUsername();
+//                } else {
+//                    return null;
+//                }
+//            } else {
+//                return null;
+//            }
+//
+//        } else {
+//            return null;
+//        }
+//    }
     
     protected String isLoggedIn(String authToken) {
     	String username = null;

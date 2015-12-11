@@ -30,9 +30,9 @@ public class TokenController {
 
     @Autowired
     private ClientService clientService;
-
-    @Autowired
-    private CookieService cookieService;
+//
+//    @Autowired
+//    private CookieService cookieService;
 
     @RequestMapping(path = "/oauth/token", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity token(@RequestParam(value = "client_id", required = true) String client_id,
@@ -78,26 +78,40 @@ public class TokenController {
         AuthorizationCode authorizationCode = authorizationCodeService.findByAuthorizationCode(parameters.code);
 
         if (authorizationCode != null) {
+        	if(authorizationCode.getClientId().equals(parameters.client_id) &&
+        	   authorizationCode.getUsername().equals(parameters.username)) {
+        		Client client = clientService.findClient(parameters.client_id);
+        		if(client.getClientSecret().equals(parameters.client_secret) &&
+        		   client.getAllowedScopes().contains(parameters.scope)) {
+        			
+        			 AccessToken accessToken = accessTokenService.createAccessToken(
+        	                    parameters.client_id,
+        	                    authorizationCode.getUsername(),
+        	                    parameters.scope);
 
-            AccessToken accessToken = accessTokenService.createAccessToken(
-                    parameters.client_id,
-                    authorizationCode.getUsername(),
-                    parameters.scope);
+        	            responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
+        	            responseHeaders.add("Cache-Control", "no-store");
+        	            responseHeaders.add("Pragma", "no-cache");
 
-            responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
-            responseHeaders.add("Cache-Control", "no-store");
-            responseHeaders.add("Pragma", "no-cache");
-
-            AccessTokenResponse tokenResponse = new AccessTokenResponse();
-            tokenResponse.access_token = accessToken.getAccessToken();
-            tokenResponse.token_type = accessToken.getTokenType();
-            tokenResponse.expires_in = accessToken.getExpiration().toString();
-            tokenResponse.scope = accessToken.getScope();
-            // TODO: refresh tokens
-            tokenResponse.refresh_token = "";
-            return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
+        	            AccessTokenResponse tokenResponse = new AccessTokenResponse();
+        	            tokenResponse.access_token = accessToken.getAccessToken();
+        	            tokenResponse.token_type = accessToken.getTokenType();
+        	            tokenResponse.expires_in = accessToken.getExpiration().toString();
+        	            tokenResponse.scope = accessToken.getScope();
+        	            // TODO: refresh tokens
+        	            tokenResponse.refresh_token = "";
+        	            return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
+        		}
+        		else {
+                    return doTokenError(parameters, "access_denied: invalid secret or scope");
+        		}
+        	}
+        	else {
+                return doTokenError(parameters, "access_denied: incorrect client_id or username");
+        	}
+           
         } else {
-            return doTokenError(parameters, "access_denied");
+            return doTokenError(parameters, "access_denied: bad authorization code");
         }
     }
     // token response example
@@ -134,6 +148,6 @@ public class TokenController {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.add("location", parameters.redirect_uri + "?error=" + error);
-        return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+        return new ResponseEntity(responseHeaders, HttpStatus.OK);
     }
 }
