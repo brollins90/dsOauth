@@ -21,6 +21,7 @@ authentication and authorization. Here's how it works:
 Step 1 - Register your app/client with the OAuth provider
 *********************************************************
 
+|
 
 .. figure:: imgs/register_client.png
 
@@ -34,6 +35,8 @@ Step 1 - Register your app/client with the OAuth provider
 Step 2 - Create a new user account on the provider 
 **************************************************
 
+|
+
 .. figure:: imgs/create_user.png
 
    Go to http://ds.transvec.com/user/new and create a new user.
@@ -43,6 +46,7 @@ Step 2 - Create a new user account on the provider
 Step 3 - Set up the client/consumer 
 ***********************************
 
+|
 
 .. figure:: imgs/client_login.png
 
@@ -56,6 +60,7 @@ Step 3 - Set up the client/consumer
 Step 4 - User authentication on the provider 
 ********************************************
 
+|
 
 .. figure:: imgs/login_page_provider.png
 
@@ -68,6 +73,7 @@ Step 4 - User authentication on the provider
 Step 5 - User is logged in on client using credentials from Oauth Provider
 **************************************************************************
 
+|
 
 .. figure:: imgs/logged_in_client.png
 
