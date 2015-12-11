@@ -38,6 +38,21 @@
     		<br/>
 			<button name="save" type="submit">Save</button>
     	</form>
+    	<h1>Permissions:</h1>
+    	<table>
+      <tr>
+        <th>CLIENT NAME</th>
+        <th>SCOPE</th>
+        <th>EXPIRATION</th>
+        <th>REVOKE</th>
+      </tr>
+      <tr th:each="permission : ${permissions}">
+        <td th:text="${permission.clientId}">Onions</td>
+        <td th:text="${permission.scope}">2.41</td>
+        <td th:text="${permission.expiration}">yes</td>
+        <td><a th:href="@{/user/revoke(accessToken=${permission.accessToken})}">REVOKE</a></td>
+      </tr>
+    </table>
     </page>
 </body>
 </html>
