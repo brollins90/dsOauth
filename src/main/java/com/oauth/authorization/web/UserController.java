@@ -46,6 +46,9 @@ public class UserController {
 
         if (!authToken.isEmpty()) {
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            if(username == null) {
+                username = loggedInUserName;
+            }
             User user = userService.findByUsername(username);
 
             if (user == null) {
