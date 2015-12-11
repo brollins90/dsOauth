@@ -77,3 +77,14 @@ Step 5 - User is logged in on client using credentials from Oauth Provider
    a new user account on-the-fly for Oauth users it doesn't already have in its database
 
 
+
+Access API
+**************************************************************************
+
+
+  Add the previously acquired access token to the Authorization header in an http request.
+  "Authorization: Bearer TOKENSTRING"
+  The API is located at http://ds.transvec.com/api/user.
+  The Api will return an object of user data that the token has permission to.
+
+

@@ -23,7 +23,7 @@ public class DsOauthApplication {
         return (args) -> {
             clientRepository.save(new Client(
                     "clientid1",
-                    "clientName",
+                    "Client with id 1",
                     "xoxoxo",
                     "http://localhost:5000/login/oauthlogout",
                     "http://localhost:5000/login/oauthcallback",
@@ -31,6 +31,18 @@ public class DsOauthApplication {
                         add("username");
                         add("email");
                         add("homephone");
+                    }},
+                    Flow.AuthorizationCode,
+                    ClientType.Confidential
+            ));
+            clientRepository.save(new Client(
+                    "dvJQD6aVAuG-!NspHuci4ktpw9TnldOz?skbUlt9",
+                    "pointless",
+                    "wHO?3fX=@geWDKJt1lug@C2IF9P=Z=OKemR3Z@qpBpDJDnYqfnr@1ZkhwBqx3weM5CMyiK=U4.jcUzhc_12hqFCRvWw3WOTQrUjL-nORgJ-iQ.?FSgGu:I5IdK_cFND2",
+                    "logmeout",
+                    "http://dsclient.transvec.com/complete/dsoauth2/",
+                    new ArrayList<String>() {{
+                        add("email");
                     }},
                     Flow.AuthorizationCode,
                     ClientType.Confidential
