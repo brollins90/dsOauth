@@ -1,16 +1,22 @@
 package com.oauth.authorization.web;
 
+import java.io.IOException;
+
 import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.AuthorizationCode;
 import com.oauth.authorization.domain.Client;
+import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.AuthorizationCodeService;
 import com.oauth.authorization.service.ClientService;
 import com.oauth.authorization.service.CookieService;
+import com.oauth.authorization.service.UserAuthenticationTokenManager;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,6 +39,9 @@ public class AuthorizeController {
 
     @Autowired
     private CookieService cookieService;
+    
+    @Autowired
+    private UserAuthenticationTokenManager atm;
 
 
     @RequestMapping(path = "/oauth/authorize", method = {RequestMethod.GET, RequestMethod.POST})
@@ -42,6 +51,7 @@ public class AuthorizeController {
             @RequestParam(value = "response_type", required = false) String response_type,
             @RequestParam(value = "scope", required = false) String scope,
             @RequestParam(value = "state", required = false) String state,
+            @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
             HttpServletRequest request) {
 
         AuthorizeParameters parameters = new AuthorizeParameters();
@@ -91,9 +101,9 @@ public class AuthorizeController {
         }
 
         if (parameters.response_type.equalsIgnoreCase("code")) { // AuthorizationCode Flow Step 1
-            return doAuthorizeCodeOrToken(parameters, request);
+            return doAuthorizeCodeOrToken(parameters, request, authToken);
         } else if (parameters.response_type.equalsIgnoreCase("token")) { // Implicit Flow
-            return doAuthorizeCodeOrToken(parameters, request);
+            return doAuthorizeCodeOrToken(parameters, request, authToken);
         } else if (parameters.response_type.equalsIgnoreCase("jwt")) { // Jwt Flow
             return doAuthorizeJwt(parameters);
         } else {
@@ -107,7 +117,7 @@ public class AuthorizeController {
     }
 
 
-    protected ResponseEntity doAuthorizeCodeOrToken(AuthorizeParameters parameters, HttpServletRequest request) {
+    protected ResponseEntity doAuthorizeCodeOrToken(AuthorizeParameters parameters, HttpServletRequest request, String authToken) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         String state = parameters.state;
@@ -135,8 +145,9 @@ public class AuthorizeController {
         }
 
         // we need to show login page, unless we are already logged in
-        String username = isLoggedIn(request);
+        String username = isLoggedIn(authToken);//request);
         if (username == null) {
+        	System.out.println();
             responseHeaders.add("location",
                     "/user/login"
                             + "?client_id=" + parameters.client_id
@@ -245,5 +256,13 @@ public class AuthorizeController {
         } else {
             return null;
         }
+    }
+    
+    protected String isLoggedIn(String authToken) {
+    	String username = null;
+    	if (!authToken.isEmpty()) {
+    		username = atm.getUserFromToken(authToken).getUsername();
+    	}
+    	return username;
     }
 }
