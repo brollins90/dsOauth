@@ -35,6 +35,18 @@ public class DsOauthApplication {
                     Flow.AuthorizationCode,
                     ClientType.Confidential
             ));
+            clientRepository.save(new Client(
+                    "dvJQD6aVAuG-!NspHuci4ktpw9TnldOz?skbUlt9",
+                    "pointless",
+                    "wHO?3fX=@geWDKJt1lug@C2IF9P=Z=OKemR3Z@qpBpDJDnYqfnr@1ZkhwBqx3weM5CMyiK=U4.jcUzhc_12hqFCRvWw3WOTQrUjL-nORgJ-iQ.?FSgGu:I5IdK_cFND2",
+                    "logmeout",
+                    "http://dsclient.transvec.com/complete/dsoauth2/",
+                    new ArrayList<String>() {{
+                        add("email");
+                    }},
+                    Flow.AuthorizationCode,
+                    ClientType.Confidential
+            ));
             userRepository.save(new User(
                     "user1",
                     "password",
