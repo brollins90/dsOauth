@@ -4,21 +4,27 @@ class DSOAuth2(BaseOAuth2):
     """Github OAuth authentication backend"""
     name = 'dsoauth2'
     #AUTHORIZATION_URL = 'http://django-oauth-toolkit.herokuapp.com/o/authorize/'
-    AUTHORIZATION_URL = 'http://localhost:8080/oauth/authorize/'
-    #AUTHORIZATION_URL = 'http://ds.transvec.com/oauth/authorize/'
+    #AUTHORIZATION_URL = 'http://localhost:8080/oauth/authorize/'
+    AUTHORIZATION_URL = 'http://ds.transvec.com/oauth/authorize/'
 
     #ACCESS_TOKEN_URL = 'http://django-oauth-toolkit.herokuapp.com/o/token/'
-    ACCESS_TOKEN_URL = 'http://localhost:8080/oauth/token/'
-    #ACCESS_TOKEN_URL = 'http://ds.transvec.com/oauth/token/'
+    #ACCESS_TOKEN_URL = 'http://localhost:8080/oauth/token/'
+    ACCESS_TOKEN_URL = 'http://ds.transvec.com/oauth/token/'
 
     REDIRECT_STATE = False
     ACCESS_TOKEN_METHOD = 'POST'
     SCOPE_SEPARATOR = ','
     DEFAULT_SCOPE = ['email']
     EXTRA_DATA = [
-        ('id', 'id'),
-        ('expires', 'expires')
+        #('id', 'id'),
+        ('expires', 'expires'),
     ]
+
+    def get_user_id(self, details, response):
+        print('details',details)
+        print('response',response)
+        return response.get('access_token')[15:]
+
 
     def get_user_details(self, response):
         print('get_user_details response',response)

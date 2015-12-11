@@ -46,7 +46,7 @@ public class UserController {
 
         if (!authToken.isEmpty()) {
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
-            if(username == null) {
+            if (username == null) {
                 username = loggedInUserName;
             }
             User user = userService.findByUsername(username);
@@ -193,14 +193,16 @@ public class UserController {
             } else {
                 model.addAttribute("client", client.getClientName());
 
+                accessTokenService.createAccessToken(client_id, username, scope);
+
                 if (loggedInUserName.equals(username)) {
                     return "redirect:/oauth/authorize"
                             + "?client_id=" + client_id
                             + "&scope=" + scope
                             + "&response_type=" + response_type
-                            + "&redirect_uri=" + redirect_uri
                             + "&state=" + state
-                            + "&username=" + username;
+                            + "&username=" + username
+                            + "&redirect_uri=" + redirect_uri;
                 } else {
                     response.setStatus(401);
                     return "loginclean"; //trying to access someone else's profile
@@ -270,17 +272,17 @@ public class UserController {
 
             if (tokenForThisClient == null) {
                 // show permission page
-                responseHeaders.add("location", "/user/addpermission?username=" + user.getUsername() + "&client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                responseHeaders.add("location", "/user/addpermission?username=" + user.getUsername() + "&client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&state=" + state + "&redirect_uri=" + redirect_uri);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             } else {
                 if (tokenForThisClient.getScope().equalsIgnoreCase(scope)) {
                     // redirect because the permission has already been granted
-                    responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&state=" + state + "&redirect_uri=" + redirect_uri);
                     return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
                 } else {
                     // we have given this client some permissions, but not the one they are asking for.
                     // do we prompt to change permissions or deny???
-                    responseHeaders.add("location", "/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    responseHeaders.add("location", "/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&state=" + state + "&redirect_uri=" + redirect_uri);
                     return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
                 }
             }
@@ -289,7 +291,7 @@ public class UserController {
         } else {
             System.out.println("User not found: " + username);
             model.addAttribute("error", "User does not exist");
-            responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+            responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&state=" + state + "&redirect_uri=" + redirect_uri);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
     }
