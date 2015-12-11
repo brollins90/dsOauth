@@ -168,6 +168,23 @@ public class UserController {
         }
     }
 
+    @RequestMapping(value="/rejectpermission", method = RequestMethod.POST)
+    public void permissionRejected(String username,
+                                   String client_id,
+                                   String scope,
+                                   String response_type,
+                                   String redirect_uri,
+                                   String state,
+                                   Model model,
+                                   HttpServletResponse response){
+        Client client = clientService.findClient(client_id);
+        try {
+            response.sendRedirect(client.getClientPostLogoutRedirectUrl());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
     public String permissionAddPost(
             @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
