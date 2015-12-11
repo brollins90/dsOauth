@@ -12,7 +12,9 @@
 
     <div class="login-container">
         <form action="#" th:action="@{/user/login}" th:object="${authParams}" method="post">
-                       <div class="form-group">
+        	<h1>Log in:</h1>
+            <label class="col-sm-2 control-label" th:text="${error}"></label>
+            <div class="form-group">
                 <label class="col-sm-2 control-label">Username</label>
 
                 <div class="col-sm-9">
