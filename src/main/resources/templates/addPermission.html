@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link th:href="@{~/style.css}" rel="stylesheet" />
+</head>
+<body>
+	<header th:replace="fragments/header :: header">
+	</header>
+	<page>
+		<h1 th:text="${client} + ' is requesting: '></h1>
+		<h1 th:text="${scope}"> </h1>
+		<form action="#" th:action="@{/user/edit}" th:object="${user}" method="post">
+    		<h1 th:text="'Edit '+${user.getName()}+'\'s profile:'"></h1>
+    		<fieldset>
+    			<label>Username:</label>
+    			<input type="text" name="username" th:field="*{username}" />
+			</fieldset>
+			<button name="save" type="submit">Approve</button>
+    	</form>
+    </page>
+</body>
+</html>

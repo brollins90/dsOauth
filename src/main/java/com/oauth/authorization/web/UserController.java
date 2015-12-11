@@ -3,10 +3,10 @@ package com.oauth.authorization.web;
 import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.AccessTokenService;
+import com.oauth.authorization.service.ClientService;
 import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserAuthenticationTokenManager;
 import com.oauth.authorization.service.UserService;
-import org.omg.CORBA.portable.ResponseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -39,6 +39,9 @@ public class UserController {
 
     @Autowired
     private UserAuthenticationTokenManager atm;
+    
+    @Autowired
+    private ClientService clientService;
 
     @RequestMapping("/profile")
     public String view(String username, Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken, HttpServletResponse response) {
@@ -121,17 +124,33 @@ public class UserController {
     }
 
     @RequestMapping(value = "/addpermission", method = RequestMethod.GET) // TODO:
-    public String permissionAdd(String username, Model model) {
-//        User user = userService.findByUsername(username);
-//        if (user != null) {
-//            model.addAttribute("user", user);
-//            model.addAttribute("username", username);
-//
-//            return "profile";
-//        } else {
-//            return "no user found";
-//        }
-        return "Not Yet Implemented exception :)";
+    public ResponseEntity permissionAdd(
+    		@CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+    		String username, 
+    		String client_id, 
+    		String scope, 
+    		String response_type, 
+    		String redirect_uri, 
+    		String state, 
+    		Model model) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        if(!authToken.isEmpty()) {
+            String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            User user = userService.findByUsername(username);
+            model.addAttribute("user", user);
+            model.addAttribute("username", username);
+            model.addAttribute("scope", scope);
+            model.addAttribute("client", clientService.findClient(client_id).getClientName());
+
+            if(loggedInUserName.equals(username)) {
+                return new ResponseEntity("addPermission", HttpStatus.OK);
+            } else {
+                responseHeaders.add("location", "http://localhost:8080/user/login2");
+                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN); //trying to access someone else's profile
+            }
+        } else {
+            return new ResponseEntity(responseHeaders, HttpStatus.UNAUTHORIZED); //no one is logged in
+        }
     }
 
     @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
@@ -205,7 +224,7 @@ public class UserController {
 
             if (tokenForThisClient == null) {
                 // show permission page
-                responseHeaders.add("location", "http://localhost:8080/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                responseHeaders.add("location", "http://localhost:8080/user/addpermission?username=" + user.getUsername() + "&client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             } else {
                 if (tokenForThisClient.getScope().equalsIgnoreCase(scope)) {
