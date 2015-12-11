@@ -23,7 +23,7 @@ public class DsOauthApplication {
         return (args) -> {
             clientRepository.save(new Client(
                     "clientid1",
-                    "clientName",
+                    "Client with id 1",
                     "xoxoxo",
                     "http://localhost:5000/login/oauthlogout",
                     "http://localhost:5000/login/oauthcallback",
