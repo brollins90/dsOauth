@@ -1,28 +1,18 @@
 package com.oauth.authorization.web;
 
-import java.io.IOException;
-
 import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.AuthorizationCode;
 import com.oauth.authorization.domain.Client;
-import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.AuthorizationCodeService;
 import com.oauth.authorization.service.ClientService;
-import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserAuthenticationTokenManager;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
@@ -37,7 +27,7 @@ public class AuthorizeController {
     @Autowired
     private ClientService clientService;
 
-//    @Autowired
+    //    @Autowired
 //    private CookieService cookieService;
 //    
     @Autowired
@@ -59,16 +49,16 @@ public class AuthorizeController {
         parameters.redirect_uri = redirect_uri;
         parameters.response_type = response_type;
         parameters.scope = scope;
-        parameters.state = (state != null) ? "&state=" + state : "";
+        parameters.state = (state != null && state.indexOf("state") == -1) ? "&state=" + state : "";
 
         StringBuilder sb = new StringBuilder();
         sb.append("/oauth/authorize?");
         if (parameters.client_id != null) sb.append("client_id=" + parameters.client_id + "&");
-        if (parameters.redirect_uri != null) sb.append("redirect_uri=" + parameters.redirect_uri + "&");
         if (parameters.response_type != null) sb.append("response_type=" + parameters.response_type + "&");
         if (parameters.scope != null) sb.append("scope=" + parameters.scope + "&");
         if (parameters.state != null) sb.append("state=" + parameters.state + "&");
-        System.out.println(sb.toString().substring(0, sb.toString().length()-2));
+        if (parameters.redirect_uri != null) sb.append("redirect_uri=" + parameters.redirect_uri + "&");
+        System.out.println(sb.toString().substring(0, sb.toString().length() - 2));
 
         // because 400 and 500 error codes are not valid in the oauth spec, we need to not require
         // the required attributes so we can redirect the response instead of the normal spring way
@@ -147,18 +137,36 @@ public class AuthorizeController {
         // we need to show login page, unless we are already logged in
         String username = isLoggedIn(authToken);//request);
         if (username == null) {
-        	System.out.println();
+            System.out.println();
             responseHeaders.add("location",
                     "/user/login"
                             + "?client_id=" + parameters.client_id
-                            + "&redirect_uri=" + parameters.redirect_uri
                             + "&response_type=" + parameters.response_type
                             + "&scope=" + parameters.scope
-                            + state);
+                            + state
+                            + "&redirect_uri=" + parameters.redirect_uri
+            );
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
 
-        // TODO: possibly show an authorize page if it hasnt been requested before
+        // we are logged in, but no permission
+        boolean tokForThisClient = false;
+        Iterable<AccessToken> tok = accessTokenService.findByUsername(username);
+        for (AccessToken t : tok)
+            if (t.getClientId().equalsIgnoreCase(parameters.client_id))
+                tokForThisClient = true;
+
+        if (!tokForThisClient) {
+            responseHeaders.add("location",
+                    "http://localhost:8080/user/addpermission?username=" + username
+                            + "&client_id=" + parameters.client_id
+                            + "&scope=" + parameters.scope
+                            + "&response_type=" + parameters.response_type
+                            + state
+                            + "&redirect_uri=" + parameters.redirect_uri
+            );
+            return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
+        }
 
         // check if scope is allowed (both on resource and allow the the user has given the permission)
         if (!client.getAllowedScopes().contains(parameters.scope)) {
@@ -259,12 +267,12 @@ public class AuthorizeController {
 //            return null;
 //        }
 //    }
-    
+
     protected String isLoggedIn(String authToken) {
-    	String username = null;
-    	if (!authToken.isEmpty()) {
-    		username = atm.getUserFromToken(authToken).getUsername();
-    	}
-    	return username;
+        String username = null;
+        if (!authToken.isEmpty()) {
+            username = atm.getUserFromToken(authToken).getUsername();
+        }
+        return username;
     }
 }
