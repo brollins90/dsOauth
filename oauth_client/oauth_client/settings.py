@@ -113,7 +113,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/static_dsoauth/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
@@ -122,14 +122,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static_serve')
 SITE_ID = 1
 
 #TODO is this needed?
-#LOGIN_REDIRECT_URL = '/'
-#LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = 'login'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
 #Python Social Auth settings
+#client redirect url: http://localhost:8000/complete/dsoauth2/
 SOCIAL_AUTH_DSOAUTH2_KEY='dvJQD6aVAuG-!NspHuci4ktpw9TnldOz?skbUlt9'
 SOCIAL_AUTH_DSOAUTH2_SECRET='wHO?3fX=@geWDKJt1lug@C2IF9P=Z=OKemR3Z@qpBpDJDnYqfnr@1ZkhwBqx3weM5CMyiK=U4.jcUzhc_12hqFCRvWw3WOTQrUjL-nORgJ-iQ.?FSgGu:I5IdK_cFND2'
+#SOCIAL_AUTH_DSOAUTH2_KEY='shayne'
+#SOCIAL_AUTH_DSOAUTH2_SECRET='wtf'
 
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'home'
-SOCIAL_AUTH_LOGIN_URL = 'login'
+#SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'home'
+#SOCIAL_AUTH_LOGIN_URL = 'login'

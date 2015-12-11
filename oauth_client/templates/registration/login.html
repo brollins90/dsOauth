@@ -14,7 +14,7 @@
 
 
 <div class="news_box">
-{% if form.errors %}
+<!--{% if form.errors %}
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
@@ -33,7 +33,8 @@
 
 <input type="submit" value="login" />
 <input type="hidden" name="next" value="{{ next }}" />
-</form>
+</form>-->
+<a href="{% url 'social:begin' 'dsoauth2' %}">Click Here to sign in with Oauth</a>
 </div>
 
 
