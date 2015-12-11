@@ -7,6 +7,7 @@ import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.ClientService;
 import com.oauth.authorization.service.UserAuthenticationTokenManager;
 import com.oauth.authorization.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,6 +65,7 @@ public class UserController {
             if (loggedInUserName.equals(username)) {
                 model.addAttribute("user", user);
                 model.addAttribute("username", username);
+                model.addAttribute("permissions", accessTokenService.findByUsername(username));
                 return "profile";
             } else {
                 response.setStatus(401);
@@ -97,6 +100,15 @@ public class UserController {
     public String newUser(Model model) {
         model.addAttribute("user", new User());
         return "newUser";
+    }
+    
+    @RequestMapping(value = "/revoke")
+    public String revoke(Model model,
+    		@CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+    		String accessToken
+    		) {
+    	accessTokenService.delete(accessToken);
+    	return "redirect:profile";
     }
 
     @RequestMapping(value = "/new", method = RequestMethod.POST)
