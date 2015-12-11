@@ -1,9 +1,6 @@
 package com.oauth;
 
-import com.oauth.authorization.domain.ClientRepository;
-import com.oauth.authorization.domain.Client;
-import com.oauth.authorization.domain.ClientType;
-import com.oauth.authorization.domain.Flow;
+import com.oauth.authorization.domain.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -22,7 +19,7 @@ public class DsOauthApplication {
     }
 
     @Bean
-    public CommandLineRunner demo(ClientRepository clientRepository) {
+    public CommandLineRunner demo(ClientRepository clientRepository, UserRepository userRepository) {
         return (args) -> {
             clientRepository.save(new Client(
                     "clientid1",
@@ -37,6 +34,20 @@ public class DsOauthApplication {
                     }},
                     Flow.AuthorizationCode,
                     ClientType.Confidential
+            ));
+            userRepository.save(new User(
+                    "user1",
+                    "password",
+                    "john doe",
+                    "user1@gmail.com",
+                    "111-111-1111"
+            ));
+            userRepository.save(new User(
+                    "user2",
+                    "password",
+                    "jayne smith",
+                    "user2@gmail.com",
+                    "222-222-2222"
             ));
         };
     }

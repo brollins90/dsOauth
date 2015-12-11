@@ -46,6 +46,9 @@ public class UserController {
 
         if (!authToken.isEmpty()) {
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            if(username == null) {
+                username = loggedInUserName;
+            }
             User user = userService.findByUsername(username);
 
             if (user == null) {
@@ -109,15 +112,18 @@ public class UserController {
     }
 
     @RequestMapping(value = "/permissions", method = RequestMethod.GET) // TODO:
-    public String permissionsList(String username, Model model) {
-        User user = userService.findByUsername(username);
+    public String permissionsList(Model model, @CookieValue(value = "Auth-Token", defaultValue = "") String authToken, HttpServletResponse response) {
+        User user = null;
+        if(!authToken.isEmpty()) {
+            user = userService.findByUsername(atm.getUserFromToken(authToken).getUsername());
+        }
         if (user != null) {
             model.addAttribute("user", user);
-            model.addAttribute("username", username);
-
+            model.addAttribute("username", user.getUsername());
             return "profile";
         } else {
-            return "no user found";
+            response.setStatus(403);
+            return "loginclean";
         }
     }
 
@@ -188,7 +194,7 @@ public class UserController {
                 model.addAttribute("client", client.getClientName());
 
                 if (loggedInUserName.equals(username)) {
-                    return "redirect:http://localhost:8080/oauth/authorize"
+                    return "redirect:/oauth/authorize"
                             + "?client_id=" + client_id
                             + "&scope=" + scope
                             + "&response_type=" + response_type
@@ -264,17 +270,17 @@ public class UserController {
 
             if (tokenForThisClient == null) {
                 // show permission page
-                responseHeaders.add("location", "http://localhost:8080/user/addpermission?username=" + user.getUsername() + "&client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                responseHeaders.add("location", "/user/addpermission?username=" + user.getUsername() + "&client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
                 return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
             } else {
                 if (tokenForThisClient.getScope().equalsIgnoreCase(scope)) {
                     // redirect because the permission has already been granted
-                    responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
                     return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
                 } else {
                     // we have given this client some permissions, but not the one they are asking for.
                     // do we prompt to change permissions or deny???
-                    responseHeaders.add("location", "http://localhost:8080/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+                    responseHeaders.add("location", "/user/addpermission?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
                     return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
                 }
             }
@@ -283,7 +289,7 @@ public class UserController {
         } else {
             System.out.println("User not found: " + username);
             model.addAttribute("error", "User does not exist");
-            responseHeaders.add("location", "http://localhost:8080/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
+            responseHeaders.add("location", "/oauth/authorize?client_id=" + client_id + "&scope=" + scope + "&response_type=" + response_type + "&redirect_uri=" + redirect_uri + "&state=" + state);
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
     }
@@ -312,11 +318,11 @@ public class UserController {
             Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
-            responseHeaders.add("location", "http://localhost:8080/user/profile?username=" + user.getUsername());
+            responseHeaders.add("location", "/user/profile?username=" + user.getUsername());
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         } else {
             System.out.println("User not found: " + username);
-            responseHeaders.add("location", "http://localhost:8080/user/login");
+            responseHeaders.add("location", "/user/login");
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }
     }
@@ -325,7 +331,7 @@ public class UserController {
     public String showLoginPage(Model model,
                                 @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
                                 @RequestParam(value = "client_id", required = true) String client_id,
-                                @RequestParam(value = "redirect_uri", defaultValue = "http://localhost:8080/user/profile") String redirect_uri,
+                                @RequestParam(value = "redirect_uri", defaultValue = "/user/profile") String redirect_uri,
                                 @RequestParam(value = "response_type", required = true) String response_type,
                                 @RequestParam(value = "scope", required = false) String scope,
                                 @RequestParam(value = "state", required = false) String state) {
