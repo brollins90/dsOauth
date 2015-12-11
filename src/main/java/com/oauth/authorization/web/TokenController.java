@@ -83,7 +83,6 @@ public class TokenController {
         return null;
     }
 
-    // /oauth/token?client_id=clientid1&client_secret=xoxoxo&code=BLAKEISCOOLb&grant_type=authorization_code&password=null&redirect_uri=http://localhost:5000/login/oauthcallbac
     protected ResponseEntity doGenerateTokenFromAuthCode(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();

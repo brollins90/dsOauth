@@ -158,7 +158,7 @@ public class AuthorizeController {
 
         if (!tokForThisClient) {
             responseHeaders.add("location",
-                    "http://localhost:8080/user/addpermission?username=" + username
+                    "/user/addpermission?username=" + username
                             + "&client_id=" + parameters.client_id
                             + "&scope=" + parameters.scope
                             + "&response_type=" + parameters.response_type
