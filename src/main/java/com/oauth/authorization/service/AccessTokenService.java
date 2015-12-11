@@ -9,4 +9,6 @@ public interface AccessTokenService {
     Iterable<AccessToken> findByUsername(String username);
 
     AccessToken createAccessToken(String clientId, String username, String scope);
+    
+    void delete(String accessToken);
 }

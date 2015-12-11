@@ -39,7 +39,7 @@ public class DsOauthApplication {
                     "dvJQD6aVAuG-!NspHuci4ktpw9TnldOz?skbUlt9",
                     "pointless",
                     "wHO?3fX=@geWDKJt1lug@C2IF9P=Z=OKemR3Z@qpBpDJDnYqfnr@1ZkhwBqx3weM5CMyiK=U4.jcUzhc_12hqFCRvWw3WOTQrUjL-nORgJ-iQ.?FSgGu:I5IdK_cFND2",
-                    "logmeout",
+                    "http://dsclient.transvec.com/",
                     "http://dsclient.transvec.com/complete/dsoauth2/",
                     new ArrayList<String>() {{
                         add("email");

@@ -2,6 +2,7 @@ package com.oauth.authorization.service;
 
 import com.oauth.authorization.domain.AccessToken;
 import com.oauth.authorization.domain.AccessTokenRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,4 +46,9 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     private String generateAccessTokenString(String username) {
         return "AndThisIsAToken"+username;
     }
+
+	@Override
+	public void delete(String accessToken) {
+		accessTokenRepository.delete(accessToken);
+	}
 }
