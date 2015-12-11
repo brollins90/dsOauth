@@ -1,10 +1,10 @@
 package com.oauth.authorization.web;
 
 import com.oauth.authorization.domain.AccessToken;
+import com.oauth.authorization.domain.Client;
 import com.oauth.authorization.domain.User;
 import com.oauth.authorization.service.AccessTokenService;
 import com.oauth.authorization.service.ClientService;
-import com.oauth.authorization.service.CookieService;
 import com.oauth.authorization.service.UserAuthenticationTokenManager;
 import com.oauth.authorization.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -31,15 +29,15 @@ public class UserController {
     @Autowired
     private AccessTokenService accessTokenService;
 
-    @Autowired
-    private CookieService cookieService;
+//    @Autowired
+//    private CookieService cookieService;
 
     @Autowired
     private UserService userService;
 
     @Autowired
     private UserAuthenticationTokenManager atm;
-    
+
     @Autowired
     private ClientService clientService;
 
@@ -127,50 +125,92 @@ public class UserController {
     }
 
     @RequestMapping(value = "/addpermission", method = RequestMethod.GET) // TODO:
-    public ResponseEntity permissionAdd(
-    		@CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
-    		String username, 
-    		String client_id, 
-    		String scope, 
-    		String response_type, 
-    		String redirect_uri, 
-    		String state, 
-    		Model model) {
-        HttpHeaders responseHeaders = new HttpHeaders();
-        if(!authToken.isEmpty()) {
+    public String permissionAdd(
+            @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+            String username,
+            String client_id,
+            String scope,
+            String response_type,
+            String redirect_uri,
+            String state,
+            Model model,
+            HttpServletResponse response) {
+        if (!authToken.isEmpty()) {
+            AuthorizeParameters authParams = new AuthorizeParameters();
+            authParams.setClient_id(client_id);
+            authParams.setRedirect_uri(redirect_uri);
+            authParams.setResponse_type(response_type);
+            authParams.setScope(scope);
+            authParams.setState(state);
+            String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
+            User user = userService.findByUsername(username);
+            model.addAttribute("user", user);
+            model.addAttribute("username", username);
+            model.addAttribute("authParams", authParams);
+            Client client = clientService.findClient(client_id);
+            if (client == null) {
+                return "Error, client not found";
+            } else {
+                model.addAttribute("client", client.getClientName());
+                if (loggedInUserName.equals(username)) {
+                    return "addPermission";
+                } else {
+                    response.setStatus(401);
+                    return "loginclean"; //trying to access someone else's profile
+                }
+            }
+        } else {
+            response.setStatus(401);
+            return "loginclean"; //no one is logged in
+        }
+    }
+
+    @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
+    public String permissionAddPost(
+            @CookieValue(value = "Auth-Token", defaultValue = "") String authToken,
+            String username,
+            String client_id,
+            String scope,
+            String response_type,
+            String redirect_uri,
+            String state,
+            Model model,
+            HttpServletResponse response) {
+
+        if (!authToken.isEmpty()) {
             String loggedInUserName = atm.getUserFromToken(authToken).getUsername();
             User user = userService.findByUsername(username);
             model.addAttribute("user", user);
             model.addAttribute("username", username);
             model.addAttribute("scope", scope);
-            model.addAttribute("client", clientService.findClient(client_id).getClientName());
-
-            if(loggedInUserName.equals(username)) {
-                return new ResponseEntity("addPermission", HttpStatus.OK);
+            model.addAttribute("authParams", new AuthorizeParameters());
+            Client client = clientService.findClient(client_id);
+            if (client == null) {
+                return null;
             } else {
-                responseHeaders.add("location", "http://localhost:8080/user/login2");
-                return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN); //trying to access someone else's profile
+                model.addAttribute("client", client.getClientName());
+
+                if (loggedInUserName.equals(username)) {
+                    return "redirect:http://localhost:8080/oauth/authorize"
+                            + "?client_id=" + client_id
+                            + "&scope=" + scope
+                            + "&response_type=" + response_type
+                            + "&redirect_uri=" + redirect_uri
+                            + "&state=" + state
+                            + "&username=" + username;
+                } else {
+                    response.setStatus(401);
+                    return "loginclean"; //trying to access someone else's profile
+                }
             }
         } else {
-            return new ResponseEntity(responseHeaders, HttpStatus.UNAUTHORIZED); //no one is logged in
+            response.setStatus(401);
+            return "loginclean"; //no one is logged in
         }
-    }
-
-    @RequestMapping(value = "/addpermission", method = RequestMethod.POST) // TODO:
-    public String permissionAddPost(String username, Model model) {
-//        User user = userService.findByUsername(username);
-//        if (user != null) {
-//            model.addAttribute("user", user);
-//            model.addAttribute("username", username);
-//
-//            return "profile";
-//        } else {
-//            return "no user found";
-//        }
         //if yes and no code -> redirect to authorize
 
         //if yes and code -> redirect to
-        return "Not Yet Implemented exception :)";
+//        return "Not Yet Implemented exception :)";
     }
 
 //    @RequestMapping("/editProfile")
@@ -275,12 +315,10 @@ public class UserController {
             Cookie authCookie = new Cookie("Auth-Token", authToken);
             authCookie.setPath("/");
             response.addCookie(authCookie);
-            model.addAttribute("user", user);
-
+            responseHeaders.add("location", "http://localhost:8080/user/profile?username=" + user.getUsername());
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         } else {
             System.out.println("User not found: " + username);
-            model.addAttribute("error", "User does not exist");
             responseHeaders.add("location", "http://localhost:8080/user/login");
             return new ResponseEntity(responseHeaders, HttpStatus.FOUND);
         }

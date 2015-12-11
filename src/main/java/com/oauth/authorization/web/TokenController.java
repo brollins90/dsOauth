@@ -30,9 +30,9 @@ public class TokenController {
 
     @Autowired
     private ClientService clientService;
-
-    @Autowired
-    private CookieService cookieService;
+//
+//    @Autowired
+//    private CookieService cookieService;
 
     @RequestMapping(path = "/oauth/token", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity token(@RequestParam(value = "client_id", required = true) String client_id,
@@ -55,7 +55,18 @@ public class TokenController {
         parameters.state = state;
         parameters.username = username;
 
-        System.out.println("token endpoint");
+        StringBuilder sb = new StringBuilder();
+        sb.append("/oauth/token?");
+        if (parameters.client_id != null) sb.append("client_id=" + parameters.client_id + "&");
+        if (parameters.client_id != null) sb.append("client_secret=" + parameters.client_secret + "&");
+        if (parameters.client_id != null) sb.append("code=" + parameters.code + "&");
+        if (parameters.client_id != null) sb.append("grant_type=" + parameters.grant_type + "&");
+        if (parameters.client_id != null) sb.append("password=" + parameters.password + "&");
+        if (parameters.redirect_uri != null) sb.append("redirect_uri=" + parameters.redirect_uri + "&");
+        if (parameters.scope != null) sb.append("scope=" + parameters.scope + "&");
+        if (parameters.state != null) sb.append("state=" + parameters.state + "&");
+        if (parameters.state != null) sb.append("username=" + parameters.username + "&");
+        System.out.println(sb.toString().substring(0, sb.toString().length()-2));
 
         if (parameters.grant_type.equalsIgnoreCase("authorization_code")) { // AuthorizationCode Flow Step 2
             return doGenerateTokenFromAuthCode(parameters);
@@ -68,36 +79,53 @@ public class TokenController {
         }
     }
 
-    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromClientCredentials(TokenParameters parameters) {
+    protected ResponseEntity doGenerateTokenFromClientCredentials(TokenParameters parameters) {
         return null;
     }
 
-    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromAuthCode(TokenParameters parameters) {
+    // /oauth/token?client_id=clientid1&client_secret=xoxoxo&code=BLAKEISCOOLb&grant_type=authorization_code&password=null&redirect_uri=http://localhost:5000/login/oauthcallbac
+    protected ResponseEntity doGenerateTokenFromAuthCode(TokenParameters parameters) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
         AuthorizationCode authorizationCode = authorizationCodeService.findByAuthorizationCode(parameters.code);
 
         if (authorizationCode != null) {
+        	if(authorizationCode.getClientId().equals(parameters.client_id)
+//                    && authorizationCode.getUsername().equals(parameters.username) // TODO: we dont have a username to compare with anymore
+                    ) {
+        		Client client = clientService.findClient(parameters.client_id);
+        		if(client.getClientSecret().equals(parameters.client_secret)
+//                        && client.getAllowedScopes().contains(parameters.scope)
+                ) {
+        			
+        			 AccessToken accessToken = accessTokenService.createAccessToken(
+        	                    parameters.client_id,
+        	                    authorizationCode.getUsername(),
+        	                    parameters.scope);
 
-            AccessToken accessToken = accessTokenService.createAccessToken(
-                    parameters.client_id,
-                    authorizationCode.getUsername(),
-                    parameters.scope);
+        	            responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
+        	            responseHeaders.add("Cache-Control", "no-store");
+        	            responseHeaders.add("Pragma", "no-cache");
 
-            responseHeaders.add("Content-Type", "application/json;charset=UTF-8");
-            responseHeaders.add("Cache-Control", "no-store");
-            responseHeaders.add("Pragma", "no-cache");
-
-            AccessTokenResponse tokenResponse = new AccessTokenResponse();
-            tokenResponse.access_token = accessToken.getAccessToken();
-            tokenResponse.token_type = accessToken.getTokenType();
-            tokenResponse.expires_in = accessToken.getExpiration().toString();
-            tokenResponse.scope = accessToken.getScope();
-            // TODO: refresh tokens
-            tokenResponse.refresh_token = "";
-            return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
+        	            AccessTokenResponse tokenResponse = new AccessTokenResponse();
+        	            tokenResponse.access_token = accessToken.getAccessToken();
+        	            tokenResponse.token_type = accessToken.getTokenType();
+        	            tokenResponse.expires_in = accessToken.getExpiration().toString();
+        	            tokenResponse.scope = accessToken.getScope();
+        	            // TODO: refresh tokens
+        	            tokenResponse.refresh_token = "";
+        	            return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.OK);
+        		}
+        		else {
+                    return doTokenError(parameters, "access_denied: invalid secret or scope");
+        		}
+        	}
+        	else {
+                return doTokenError(parameters, "access_denied: incorrect client_id or username");
+        	}
+           
         } else {
-            return doTokenError(parameters, "access_denied");
+            return doTokenError(parameters, "access_denied: bad authorization code");
         }
     }
     // token response example
@@ -115,7 +143,7 @@ public class TokenController {
      }*/
 
 
-    protected ResponseEntity<AccessTokenResponse> doGenerateTokenFromPassword(TokenParameters parameters) {
+    protected ResponseEntity doGenerateTokenFromPassword(TokenParameters parameters) {
 
         return null;
 //        HttpHeaders responseHeaders = new HttpHeaders();
@@ -130,10 +158,18 @@ public class TokenController {
 //        }
     }
 
+    // todo: this one
+    // needs to be a 400 error on token errors
     protected ResponseEntity doTokenError(TokenParameters parameters, String error) {
 
         HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.add("location", parameters.redirect_uri + "?error=" + error);
-        return new ResponseEntity(responseHeaders, HttpStatus.FORBIDDEN);
+        responseHeaders.add("Content-Type", "application/x-www-form-urlencoded");
+        responseHeaders.add("Cache-Control", "no-store");
+        responseHeaders.add("Pragma", "no-cache");
+
+        AccessTokenErrorResponse tokenResponse = new AccessTokenErrorResponse();
+        tokenResponse.error = error;
+        tokenResponse.error_description = "";
+        return new ResponseEntity<>(tokenResponse, responseHeaders, HttpStatus.BAD_REQUEST);
     }
 }
