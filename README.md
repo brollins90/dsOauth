@@ -1,3 +1,2 @@
 # dsOauth
-google doc
-https://docs.google.com/document/d/1RNY00dHXHWUKnYO38wF14O6wW1IObt957TX2quggHas/edit?usp=sharing
+This project is an implementation of the OAuth2 protocol using SpringBoot for the CSC380 (Distributed Systems) class at Neumont University during 2015 Q4 Fall.
